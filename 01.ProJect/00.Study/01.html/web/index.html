@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>My test page</title>
+  </head>
+  <body>
+    <input type="text" id="testId">
+    <input type="text" id="testNm">
+    <input type="button" onclick = "clickEvent();" value="버튼">
+  </body>
+
+  <script src="./js/common.js"></script>
+  
+  <script>
+    const testId = document.getElementById('testId');
+    const testNm = document.getElementById('testNm');
+
+    testId.addEventListener("change",clickEvent());
+
+        // 콜백 event 호출
+        function clickEvent(){
+            req = new Object();
+
+            req.Code = document.getElementById('testId').value;
+            req.Name = document.getElementById('testNm').value;
+
+            console.log(req);
+
+            fnCmnPrc(req, function fnCallback(){
+              console.log("응답처리");
+            });
+        }    
+  </script>
+</html>
