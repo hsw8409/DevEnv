@@ -9,7 +9,7 @@
 
 	function upload(event) {
 
-        // 월, 프로젝트, M/D합
+        // 월, 프로젝트, M/D계
         let subData = [];
 
 		var input = event.target;
@@ -27,7 +27,6 @@
 			
 			read_buffer.SheetNames.forEach(function(sheetName) {
 				var rowdata = XLSX.utils.sheet_to_json(read_buffer.Sheets[sheetName]);
-				//console.log("[" + sheetName + "] 시트 데이터 : " + JSON.stringify(rowdata));
 				
 				$.each(rowdata, function(i, coldata){
 					//console.log(rowdata);
@@ -52,8 +51,7 @@
                         if ( colHeader == "담당자" || colHeader == "업무일" || colHeader == "중분류" || colHeader == "소분류" || colHeader == "M/D" ){
                             if ( colHeader == "담당자"){
                                 subObj.userNm = colText;
-                            }
-                            if ( colHeader == "업무일"){
+                            }else if ( colHeader == "업무일"){
                                 // 슬러시 제거
                                 colText = colText.replaceAll('/', '').substr(0,6);
                                 subObj.months = colText;
@@ -86,7 +84,7 @@
 			xlsArea.innerHTML = tableStr;
 
             // 소계 
-
+            // 담당자 순으로 정렬.
             subData.sort(function(a, b) {
                 var userNmA = a.userNm.toUpperCase();
                 var userNmB = b.userNm.toUpperCase();
@@ -96,8 +94,6 @@
                 if (userNmA > userNmB) {
                     return 1;
                 }
-
-                // 이름이 같을 경우
                 return 0;
             });
 
@@ -105,13 +101,13 @@
             var subArea = document.getElementById("subArea");
             var tableStrSub  = "<table style='border:1px solid;'>"; 
                 tableStrSub += "<tr>";
-                tableStrSub += "<th style='color:red;width:500px;border:1px solid;'>담당자<th>";
-                tableStrSub += "<th style='color:red;width:500px;border:1px solid;'>년월<th>";
-                tableStrSub += "<th style='color:red;width:500px;border:1px solid;'>중분류<th>";
-                tableStrSub += "<th style='color:red;width:500px;border:1px solid;'>소분류<th>";                
-                tableStrSub += "<th style='color:red;width:500px;border:1px solid;'>M/D 소계<th>";
+                tableStrSub += "<td style='color:red;width:12%;border:1px solid;'>담당자<th>";
+                tableStrSub += "<td style='color:red;width:10%;border:1px solid;'>년월<th>";
+                tableStrSub += "<td style='color:red;width:30%;border:1px solid;'>중분류<th>";
+                tableStrSub += "<td style='color:red;width:40%;border:1px solid;'>소분류<th>";                
+                tableStrSub += "<td style='color:red;width:8%;border:1px solid;'>소계<th>";
                 tableStrSub += "</tr>";    
-                console.log(subData.length);
+                //console.log(subData.length);
 
                 for ( var i=0; i<subData.length; i++){
                     tableStrSub += "<tr>";                    
@@ -126,7 +122,7 @@
 
 
 
-            console.log(tableStrSub);
+            //console.log(tableStrSub);
             subArea.innerHTML = tableStrSub;
 		};
 		reader.readAsBinaryString(input.files[0]);
@@ -149,6 +145,7 @@
 	<input type="file" id="id_file_upload" onchange="upload(event)"/><br/>
 	<br />
 	<div id="xlsArea" style="width:60%;"></div>
+    <div id="space"> </div>
     <div id="subArea" style="width:40%;"></div>
 </body>
 </html>
