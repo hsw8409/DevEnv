@@ -16,16 +16,19 @@ function fnCmnPrc(objForm, reqParams, callbackFn){
 
     for(key in reqParams) {
         
-        console.log("fnCmnPrc for value",reqParams[key]);
+        //console.log("fnCmnPrc for value",reqParams[key]);
 
         this.fnSetData(objForm, key, reqParams[key]);
     } 
 
-    console.log("fnCmnPrc testId",Number(reqParams["testId"]));
-    console.log("fnCmnPrc testNm",Number(reqParams["testNm"]));
+    let rmk  = Number(reqParams["testId"]) * Number(reqParams["testNm"]);
+    let rmk2 = Number(reqParams["testId"]) + Number(reqParams["testNm"]);
 
-    resData.rmk  = Number(reqParams["testId"]) * Number(reqParams["testNm"]);
-    resData.rmk2 = Number(reqParams["testId"]) + Number(reqParams["testNm"]);
+    this.fnSetData(objForm, rmk, rmk);
+    this.fnSetData(objForm, rmk2, rmk2);
+
+
+    resData = this.fnSetObjtoJson(this.frmSearch2);
 
     console.log("fnCmnPrc resData",resData);
 
@@ -105,14 +108,21 @@ function fnAddEventListener(objForm, key, eventType, eventFnc){
 
 
     if ( this.fnGetObj(objForm, key) ){
-        document.forms[objForm.name][key].addEventListener(eventType, function fnc(){
-            (new Function(  eventFnc + '();' ))();
-        })
-    }  
-}
+        if ( eventType == "change"){
+            document.forms[objForm.name][key].addEventListener(eventType, function(event){
+                (new Function(  eventFnc + '('+event.target.id+');' ))();
+            })
+        }else if ( eventType == "keyup"){
+            document.forms[objForm.name][key].addEventListener(eventType, function(event){
+                if(event.isComposing){
+                    return;
+                }else{
+                    (new Function(  eventFnc + '('+event.keyCode+');' ))();
+                }
+            })
+        }
 
-function fnkeydownEvt(event){
-    console.log(event);
+    }  
 }
 
 
