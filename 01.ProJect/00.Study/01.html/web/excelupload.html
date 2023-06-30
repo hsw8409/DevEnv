@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>그룹웨어 일별보고 엑셀 업로드</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script>
+
+	function upload(event) {
+
+        // 월, 프로젝트, M/D합
+        let subData = [];
+
+		var input = event.target;
+		var reader = new FileReader();
+
+		reader.onload = function() {
+
+			var fdata = reader.result;
+
+			var read_buffer = XLSX.read(fdata, {type : 'binary'});
+			
+			var xlsArea = document.getElementById("xlsArea");
+
+			var tableStr = "<table style='border:1px solid;'>";
+			
+			read_buffer.SheetNames.forEach(function(sheetName) {
+				var rowdata = XLSX.utils.sheet_to_json(read_buffer.Sheets[sheetName]);
+				//console.log("[" + sheetName + "] 시트 데이터 : " + JSON.stringify(rowdata));
+				
+				$.each(rowdata, function(i, coldata){
+					//console.log(rowdata);
+                    
+                    let subObj = new Object();
+
+					//엑셀 Header 세팅
+					if(i == 0){
+						tableStr += "<tr>";
+						$.each(coldata, function(colHeader, colText){
+							tableStr += "<th style='color:red;width:500px;border:1px solid;'>" + colHeader + "<th>";
+						});
+						tableStr += "</tr>";
+					}
+                    //엑셀 내용 세팅
+                    tableStr += "<tr>";
+                    $.each(coldata, function(colHeader, colText){
+                        tableStr += "<td style='border:1px solid;'>" + colText + "<td>";
+                        //console.log("["+colHeader + "]/[" + colText + "]");
+                        
+                        //소계
+                        if ( colHeader == "담당자" || colHeader == "업무일" || colHeader == "중분류" || colHeader == "소분류" || colHeader == "M/D" ){
+                            if ( colHeader == "담당자"){
+                                subObj.userNm = colText;
+                            }
+                            if ( colHeader == "업무일"){
+                                // 슬러시 제거
+                                colText = colText.replaceAll('/', '').substr(0,6);
+                                subObj.months = colText;
+                            }else if ( colHeader == "중분류"){
+                                subObj.mClass = colText;
+                            }else if ( colHeader == "소분류"){
+                                subObj.sClass = colText;
+                            }else if ( colHeader == "M/D"){
+                                subObj.work = colText;
+                            }
+                        }                            
+                    });
+                    tableStr += "</tr>";
+
+                    //console.log(subObj.months);
+
+                    var findData = subData.findIndex(e => e.userNm === subObj.userNm && e.months === subObj.months && e.mClass === subObj.mClass && e.sClass === subObj.sClass ) ;
+                    
+                    //console.log(findData);
+
+                    
+                    if ( findData == -1 ){
+                        subData.push(subObj);
+                    }else{
+                        subData[findData].work = Number(subData[findData].work) + Number(subObj.work);
+                    }                    
+				});
+			});
+			tableStr += "</table>";
+			xlsArea.innerHTML = tableStr;
+
+            // 소계 
+            var subArea = document.getElementById("subArea");
+            var tableStrSub  = "<table style='border:1px solid;'>"; 
+                tableStrSub += "<tr>";
+                tableStrSub += "<th style='color:red;width:500px;border:1px solid;'>담당자<th>";
+                tableStrSub += "<th style='color:red;width:500px;border:1px solid;'>년월<th>";
+                tableStrSub += "<th style='color:red;width:500px;border:1px solid;'>중분류<th>";
+                tableStrSub += "<th style='color:red;width:500px;border:1px solid;'>소분류<th>";                
+                tableStrSub += "<th style='color:red;width:500px;border:1px solid;'>M/D 소계<th>";
+                tableStrSub += "</tr>";    
+                console.log(subData.length);
+
+                for ( var i=0; i<subData.length; i++){
+                    tableStrSub += "<tr>";                    
+                    tableStrSub += "<td style='border:1px solid;'>" + subData[i].userNm + "<td>";
+                    tableStrSub += "<td style='border:1px solid;'>" + subData[i].months + "<td>";
+                    tableStrSub += "<td style='border:1px solid;'>" + subData[i].mClass + "<td>";
+                    tableStrSub += "<td style='border:1px solid;'>" + subData[i].sClass + "<td>";
+                    tableStrSub += "<td style='border:1px solid;'>" + subData[i].work   + "<td>";
+                    tableStrSub += "</tr>";                                
+                }
+                tableStrSub += "</table>";                                                    
+
+
+
+            console.log(tableStrSub);
+            subArea.innerHTML = tableStrSub;
+		};
+		reader.readAsBinaryString(input.files[0]);
+
+
+
+
+	}
+</script>
+
+<style>
+
+    div{
+        float:left;
+    }
+</style>
+
+</head>
+<body>
+	<input type="file" id="id_file_upload" onchange="upload(event)"/><br/>
+	<br />
+	<div id="xlsArea" style="width:60%;"></div>
+    <div id="subArea" style="width:40%;"></div>
+</body>
+</html>
