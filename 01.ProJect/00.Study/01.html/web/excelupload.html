@@ -69,10 +69,7 @@
                     //console.log(subObj.months);
 
                     var findData = subData.findIndex(e => e.userNm === subObj.userNm && e.months === subObj.months && e.mClass === subObj.mClass && e.sClass === subObj.sClass ) ;
-                    
-                    //console.log(findData);
-
-                    
+                    //console.log(findData);                    
                     if ( findData == -1 ){
                         subData.push(subObj);
                     }else{
