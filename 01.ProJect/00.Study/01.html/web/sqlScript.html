@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title> 엑셀 파일로 스크립트 생성</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script>
+
+  const arrLpad = [4];
+  // 자릿수 채울 길이 : 컬럼명, 컬럼desc, nullable, pk, coment_column
+  const arrRpad = [30,15,15,60];
+
+  // 
+  function fnGetData(type, val){
+    let rtn = val;
+
+    // 일반 텍스트 인 경우
+    if ( type = "TEXT"){
+      if ( val == undefined || val == "undefined"){
+        rtn = "";
+      }
+    }
+
+    return rtn;
+  }
+
+  // 파일 다운로드
+  function download(){
+
+    let textArea = document.getElementById('textArea').innerText;
+    let sel = document.getElementById('saveType');
+    
+    var saveType = sel.options[sel.selectedIndex].value;  // 선택한 파일 확장자
+
+    var link = document.createElement('a');
+    link.setAttribute('download', "crdQuery."+saveType);
+    link.setAttribute('href', 'data:' + "application/text"  +  ';charset=utf-8,' + encodeURIComponent(textArea));
+    link.click();    
+  }
+
+  // 자릿수 채우기 ( 좌측 )
+  function lPad(val, len, padStr){
+
+    let rtn = val;
+
+    // 공백인 경우 html tag 로 변환.
+    if ( padStr == ""){
+      padStr = "&nbsp;";
+    }
+
+    if ( rtn.length < len ){
+      for ( i = rtn.length; i<len; i++){
+        rtn = padStr + rtn;
+      }
+    }
+
+    return rtn;
+  }
+
+  // 자릿수 채우기 ( 우측 )
+  function rPad(val, len, padStr){
+
+    let rtn = val;
+    
+    // 공백인 경우 html tag 로 변환.
+    if ( padStr == ""){
+      padStr = "&nbsp;";
+    }    
+
+    if ( rtn.length < len ){
+      for ( i = rtn.length; i<len; i++){
+        rtn = rtn + padStr;
+      }
+    }
+
+    return rtn;
+  }
+  
+
+  // 테이블 전체 스크립트 생성
+  // 배열순번, obj
+  function fnGetCreateTable(i, obj){
+
+    let rtn = [];
+    // 시작
+    rtn[0]  = "<p>";    
+    rtn[0] += " /* " + obj.TABLE_NAME + " */";
+    rtn[0] += "<p>";
+    rtn[0] += "CREATE TABLE " + obj.TABLE_NAME + "<br>";
+    rtn[0] += "(" + "<br>";
+
+    // 끝
+    rtn[1] = ")" + "<br>";
+
+    return rtn;
+  }
+
+  // 테이블 컬럼 스크립트 생성
+  function fnGetCreateColumn(i, obj){
+    let rtn = "";
+    
+    // 컬럼 desc
+    if ( obj.COLUMN_ID == "1"){
+      rtn = "&nbsp;&nbsp;" + rPad(obj.COLUMN_NAME ,arrRpad[0] ,"") + " " + rPad(obj.TYPE_DESC ,arrRpad[1] ,"");
+    }else{
+      rtn = ", "           + rPad(obj.COLUMN_NAME ,arrRpad[0] ,"") + " " + rPad(obj.TYPE_DESC ,arrRpad[1] ,"");
+    }
+
+    // 컬럼 default
+    if ( obj.DEFAULT != "" && obj.DEFAULT != undefined){
+      rtn += rPad("DEFAULT " + obj.DEFAULT ,arrRpad[0] ,"");
+    }else{
+      rtn += rPad("" ,arrRpad[0] ,"");
+    }
+
+    // 컬럼 nullable
+    if ( obj.NULLABLE == "N"){
+      rtn += rPad("NOT NULL" ,arrRpad[1] ,"");
+    }else{
+      rtn += rPad("NULL" ,arrRpad[1] ,"");
+    }      
+    
+    rtn += "<br>";
+
+    return rtn;    
+  }
+
+  // 테이블 스페이스 스크립트 생성
+  function fnGetCreateTblSpace(type, tblName, str){
+
+    let rtn = "";
+
+    //let strTblSpace = document.getElementById('tblSpace').value;
+
+    let spaceDat = document.getElementById('spaceDat').value;
+    let spaceIdx = document.getElementById('spaceIdx').value;
+
+
+    // type ( 1:data, 2:index)
+    if ( type == "1"){
+      rtn = "TABLESPACE " + spaceDat + ";";
+      rtn += "<p>";
+    }else if ( type == "2"){
+      if ( str != "") {
+        rtn = ", CONSTRAINT PK_" + tblName + " PRIMARY KEY (" + "<br>";
+        rtn += "&nbsp;&nbsp;&nbsp;&nbsp;"+ str + "<br>";
+        rtn += "&nbsp;&nbsp;) USING INDEX TABLESPACE " + spaceIdx + " VALIDATE " + "<br>";
+      }
+    }
+
+    return rtn;
+  }
+
+  // 테이블 커맨트 스크립트 생성
+  function fnGetCreateComment(i, obj){
+    let rtn = "";
+
+    if ( obj.COLUMN_ID == "1"){
+      rtn += "COMMENT ON TABLE  " + rPad(obj.TABLE_NAME, arrRpad[3], "") + " IS '" + fnGetData("TEXT",obj.TABLE_COMMENT) + "';" + "<br>";
+    }
+    
+    rtn += "COMMENT ON COLUMN " + rPad(obj.TABLE_NAME + "." + obj.COLUMN_NAME, arrRpad[3], "") + " IS '" + fnGetData("TEXT", obj.COLUMN_COMMENT) + "';" + "<br>";
+
+    return rtn;
+  }
+
+
+  // 테이블 정의서 파일 업로드.
+	function upload(event) {
+		
+    var input = event.target;
+		var reader = new FileReader();
+
+		reader.onload = function() { 
+
+      let arrList = [];
+
+			var fdata = reader.result;
+
+			var read_buffer = XLSX.read(fdata, {type : 'binary'});
+			
+      // 엑셀 데이터를 배열에 넣는다.
+			read_buffer.SheetNames.forEach(function(sheetName) {
+
+				var rowdata = XLSX.utils.sheet_to_json(read_buffer.Sheets[sheetName]);
+
+        //console.log(rowdata);
+				
+				$.each(rowdata, function(i, coldata){
+
+          let colData = new Object();
+
+          $.each(coldata, function(colHeader, colText){
+            
+            if ( colHeader == "TABLE_NAME"){
+              colData.TABLE_NAME = colText;
+            }else if( colHeader == "TABLE_COMMENT"){
+              colData.TABLE_COMMENT = colText;
+            }else if( colHeader == "COLUMN_ID"){
+              colData.COLUMN_ID = colText;
+            }else if( colHeader == "COLUMN_NAME"){
+              colData.COLUMN_NAME = colText;
+            }else if( colHeader == "COLUMN_COMMENT"){
+              colData.COLUMN_COMMENT = colText;
+            }else if( colHeader == "TYPE"){
+              colData.TYPE = colText;
+            }else if( colHeader == "LENGTH"){
+              colData.LENGTH = colText;
+            }else if( colHeader == "NULLABLE"){
+              colData.NULLABLE = colText;
+            }else if( colHeader == "PK"){
+              colData.PK = colText;
+            }else if( colHeader == "TYPE_DESC"){
+              colData.TYPE_DESC = colText;
+            }else if( colHeader == "DEFAULT"){
+              colData.DEFAULT = colText;
+            }                              
+				  });
+
+          arrList.push(colData);
+
+			  });
+      });
+      
+      let strQuery    ="";
+
+      let strTblQuery ="";
+      let strColQuery ="";
+
+      let strPkQuery      ="";
+      let strIndexQuery   ="";
+      let strCommentQeury ="";
+
+      //for( var i=0; i<arrList.length; i++){
+      for( var i=0; i<arrList.length; i++){
+    
+        // 신규 테이블인 경우
+        if ( arrList[i].COLUMN_ID == "1"){
+
+          // 첫번째 행이 아닌 경우
+          if ( i != 0 ){
+            strIndexQuery = fnGetCreateTblSpace('2', arrList[i-1].TABLE_NAME, strPkQuery );
+            strQuery += strTblQuery.join(strColQuery + strIndexQuery );
+            strQuery += fnGetCreateTblSpace('1', arrList[i-1].TABLE_NAME, "" );
+            strQuery += strCommentQeury;
+          }
+
+          // 테이블 스크립트 초기화
+          strTblQuery = "";          
+          strTblQuery = fnGetCreateTable(i, arrList[i]);
+
+          // 컬럼 스크립트 초기화
+          strColQuery = "";
+          strColQuery += fnGetCreateColumn(i, arrList[i]);
+          
+          // PK 스크립트 초기화
+          strPkQuery = "";
+          if ( arrList[i].PK == "Y"){
+            strPkQuery += arrList[i].COLUMN_NAME;
+          }
+
+         
+          // 커맨트 스크립츠 초기화 
+          strCommentQeury = "";
+          strCommentQeury += fnGetCreateComment(i, arrList[i]);
+
+        }else{
+          strColQuery += fnGetCreateColumn(i, arrList[i]);
+          strCommentQeury += fnGetCreateComment(i, arrList[i]);
+
+          if ( arrList[i].PK == "Y"){
+            strPkQuery += ", "+arrList[i].COLUMN_NAME;
+          }          
+          
+        }
+
+        // 마지막 라인인 경우 
+        if ( i == arrList.length-1 ){
+          strIndexQuery = fnGetCreateTblSpace('2', arrList[i-1].TABLE_NAME, strPkQuery );
+          strQuery += strTblQuery.join(strColQuery + strIndexQuery );
+          strQuery += fnGetCreateTblSpace('1', arrList[i-1].TABLE_NAME, "" );
+          strQuery += strCommentQeury;
+        }
+
+        //console.log(strQuery);
+      }
+      
+      
+
+      //console.log(arrList);
+      /*
+      let strQuery      = "";    // 전체 쿼리문
+      let strComment    = "";    // 테이블의 커맨트 텍스트 변수
+      let strPk         = "";    // 테이블의 pk 컬럼 텍스트 변수
+      let strOption     = "PCTFREE 10 INITRANS 2 STORAGE ( MAXEXTENTS UNLIMITED ) LOGGING NOPARALLEL";
+
+      let strTbSpace = document.getElementById('tblSpace').value;
+
+      // 배열에 저장한 엑셀 데이터를 루프를 돌면서 실행한다.
+      for( var i=0; i<arrList.length; i++){
+
+        // COLUMN_ID 가 '1'인 경우는 테이블 생성시 첫번째 컬럼이므로, 테이블명이 변경이 이루어 진다.
+        if ( arrList[i].COLUMN_ID == "1"){
+
+          // 제일 처음인 경우에는 생성할 테이블이 없기 때문에 예외로 처리한다.
+          if ( i == 0 ){
+
+            // 테이블 시작점을 보여주기 위한 주석 텍스트
+            strQuery += "-- "+ arrList[i].TABLE_NAME +" ";
+            strQuery += "<p>";
+
+            // 테이블 생성 스크립트를 시작한다.
+            strQuery += "CREATE TABLE " + arrList[i].TABLE_NAME + "<br>";
+            strQuery += "(" + "<br>";
+            strQuery += "&nbsp;&nbsp;" + rPad(arrList[i].COLUMN_NAME ,arrPad[0] ,"") + " " + rPad(arrList[i].TYPE_DESC ,arrPad[1] ,"");
+
+            // default 값이 있는 경우 텍스트 추가.
+            if ( arrList[i].DEFAULT != "" && arrList[i].DEFAULT != undefined){
+              strQuery += rPad("DEFAULT " + arrList[i].DEFAULT ,arrPad[0] ,"");
+            }else{
+              strQuery += rPad("" ,arrPad[0] ,"");
+            }
+
+            // NULL 허용하지 않는 경우 텍스트 추가.
+            if ( arrList[i].NULLABLE == "N"){
+              strQuery += rPad("NOT NULL" ,arrPad[1] ,"");
+            }else{
+              strQuery += rPad("NULL" ,arrPad[1] ,"");
+            }     
+
+            // PK 컬럼인 경우 텍스트 추가.
+            if ( arrList[i].PK == "Y"){
+              crdStr += rPad("primary key", arrPad[2], "");
+            }else{
+              strQuery += rPad("" ,arrPad[2] ,"");
+            } 
+
+            strQuery += "<br>";
+
+            // PK 컬럼인 경우 텍스트 추가.
+            if ( arrList[i].PK == "Y"){
+              if ( pkStr == ""){
+                pkStr = arrList[i].COLUMN_NAME;
+              }else{
+                pkStr += ", " + arrList[i].COLUMN_NAME;
+              }
+            }            
+
+            // 주석 텍스트 추가.
+            strComment += "COMMENT ON TABLE  " + rPad(arrList[i].TABLE_NAME, arrPad[3], "") + " IS '" + fnGetData("TEXT",arrList[i].TABLE_COMMENT) + "';" + "<br>";
+            strComment += "COMMENT ON COLUMN " + rPad(arrList[i].TABLE_NAME + "." +  arrList[i].COLUMN_NAME, arrPad[3], "") + " IS '" + fnGetData("TEXT",arrList[i].COLUMN_COMMENT) + "';" + "<br>";
+            
+          }else{
+
+            // 이전 테이블이 있는 경우 처리 시작
+
+            // 이전테이블의 스크립트 마무리.
+            strQuery += ")" + "<br>";
+            strQuery += "TABLESPACE "+ strTbSpace + "_DAT " + strOption + ";";
+            strQuery += "<p>";
+
+            // PK 컬럼이 있는 경우 UNIQUE INDEX, PK를 생성한다.
+            if ( pkStr != ""){
+              
+              // UNIQUE INDEX 생성 텍스트 추가.
+              strQuery += "CREATE UNIQUE INDEX PK_" + arrList[i-1].TABLE_NAME +" ON " + arrList[i-1].TABLE_NAME + "<br>";
+              strQuery += "(" + "<br>";
+              strQuery += pkStr + "<br>";
+              strQuery += ")" + "<br>";
+              strQuery += "TABLESPACE "+ strTbSpace + "_IDX;";
+              
+              pkStr = "";
+            }
+
+            // 주석 텍스트 추가.
+            strQuery += "<p>";
+            strQuery += strComment;
+            strComment = "";            
+
+            strQuery += "<p>";
+
+            // 현재 테이블 생성 스크립트 시작
+
+
+            // 테이블 시작점을 보여주기 위한 주석 텍스트            
+            strQuery += "-- "+ arrList[i].TABLE_NAME +" ";
+            strQuery += "<p>";
+
+            // 테이블 생성 스크립트를 시작한다.
+            strQuery += "CREATE TABLE " + arrList[i].TABLE_NAME + "<br>";
+            strQuery += "( " + "<br>";
+            
+            // 테이블 컬럼 생성 텍스트 추가.
+            strQuery += "&nbsp;&nbsp;" + rPad(arrList[i].COLUMN_NAME ,arrPad[0] ,"") + " " + rPad(arrList[i].TYPE_DESC ,arrPad[1] ,"");
+
+            // default 값이 있는 경우 텍스트 추가.            
+            if ( arrList[i].DEFAULT != "" && arrList[i].DEFAULT != undefined){
+              strQuery += rPad("DEFAULT " + arrList[i].DEFAULT ,arrPad[0] ,"");
+            }else{
+              strQuery += rPad("" ,arrPad[0] ,"");
+            }
+
+            // NULL 허용하지 않는 경우 텍스트 추가.            
+            if ( arrList[i].NULLABLE == "N"){
+              strQuery += rPad("NOT NULL" ,arrPad[1] ,"");
+            }else{
+              strQuery += rPad("NULL" ,arrPad[1] ,"");
+            }   
+            
+            // PK 컬럼인 경우 텍스트 추가.
+            if ( arrList[i].PK == "Y"){
+              strQuery += rPad("primary key", arrPad[2], "");
+            }else{
+              strQuery += rPad("" ,arrPad[2] ,"");
+            } 
+
+            strQuery += "<br>";            
+
+            // PK 컬럼인 경우 텍스트 추가.
+            if ( arrList[i].PK == "Y"){
+              if ( pkStr == "" ){
+                pkStr = arrList[i].COLUMN_NAME;
+              }else{
+                pkStr += ", " + arrList[i].COLUMN_NAME;
+              }
+            }
+
+            // 주석 텍스트 추가. 
+            strComment += "COMMENT ON TABLE  " + rPad(arrList[i].TABLE_NAME, arrPad[3], "") + " IS '" + fnGetData("TEXT",arrList[i].TABLE_COMMENT) + "';" + "<br>";
+            strComment += "COMMENT ON COLUMN " + rPad(arrList[i].TABLE_NAME + "." +  arrList[i].COLUMN_NAME, arrPad[3], "") + " IS '" + fnGetData("TEXT",arrList[i].COLUMN_COMMENT) + "';" + "<br>";
+
+
+            
+          }
+
+        }else{
+
+          // 테이블 컬럼 생성 텍스트 추가.
+          strQuery += "&nbsp;&nbsp;" + rPad(arrList[i].COLUMN_NAME ,arrPad[0] ,"") + " " + rPad(arrList[i].TYPE_DESC ,arrPad[1] ,"");
+
+          // default 값이 있는 경우 텍스트 추가.                      
+          if ( arrList[i].DEFAULT != "" && arrList[i].DEFAULT != undefined){
+            strQuery += rPad("DEFAULT " + arrList[i].DEFAULT ,arrPad[0] ,"");
+            }else{
+              strQuery += rPad("" ,arrPad[0] ,"");
+            }         
+
+          // NULL 허용하지 않는 경우 텍스트 추가.          
+          if ( arrList[i].NULLABLE == "N"){
+            strQuery += rPad("NOT NULL" ,arrPad[1] ,"");
+          }else{
+            strQuery += rPad("NULL" ,arrPad[1] ,"");
+          }  
+
+          // PK 컬럼인 경우 텍스트 추가.
+          if ( arrList[i].PK == "Y"){
+            strQuery += rPad("primary key", arrPad[2], "");
+          }else{
+            strQuery += rPad("" ,arrPad[2] ,"");
+          }           
+          
+          strQuery += "<br>";
+          
+          // PK 컬럼인 경우 텍스트 추가.          
+          if ( arrList[i].PK == "Y"){
+            if ( pkStr == ""){
+              pkStr = arrList[i].COLUMN_NAME;
+            }else{
+              pkStr += ", " + arrList[i].COLUMN_NAME;
+            }
+          }
+
+          // 주석 텍스트 추가.          
+          strComment += "COMMENT ON COLUMN " + rPad(arrList[i].TABLE_NAME + "." +  arrList[i].COLUMN_NAME, arrPad[3], "") + " IS '" + fnGetData("TEXT",arrList[i].COLUMN_COMMENT) + "';" + "<br>";
+          
+          
+        }
+
+        //console.log(strQuery);
+      }
+      
+      */
+
+      textArea.innerHTML = strQuery;
+    };
+
+    reader.readAsBinaryString(input.files[0]);
+  }
+
+  // 테이블스페이스 입력시 DAT, IDX 별칭 변경 처리.
+  function fnChgSpace(event){
+
+    let spaceNm = document.getElementById('spaceNm').value;
+
+    document.getElementById('spaceDat').value = spaceNm+"_DAT";
+    document.getElementById('spaceIdx').value = spaceNm+"_IX";
+
+  }
+</script>
+
+<style>
+
+    div{
+        float:left;
+    }
+</style>
+
+</head>
+<body>
+  <label>테이블스페이스 별칭</label>&nbsp;<input type="input" id="spaceNm" value ="TEST" title="테이블스페이스 별칭" onfocus="this.select()" oninput="fnChgSpace(event);"><br>
+  <label>테이블스페이스(DAT)</label>&nbsp;<input type="input" id="spaceDat" value ="TEST_DAT" title="테이블스페이스(DAT)" onfocus="this.select()"><br>
+  <label>테이블스페이스(IDX)</label>&nbsp;<input type="input" id="spaceIdx" value ="TEST_DAT" title="테이블스페이스(IDX)" onfocus="this.select()"><br>
+	<input type="file" id="id_file_upload" onchange="upload(event)"/><br/>
+  <label>파일 확장자</label>
+  <select id="saveType">
+    <option value="sql">SQL(.sql)</option>    
+    <option value="text">텍스트(.text)</option>
+  </select>  
+  <input type="button" id="id_file_download" onclick="download()" value ="실행 쿼리 다운로드"/><br/>
+	<br />
+	<div id="textArea">테이블 정의서 파일 선택 해주세요.</div>
+</body>
+</html>
