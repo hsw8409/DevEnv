@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>My test page</title>
+  </head>
+  <body>
+    <div>
+      <form name="frmSearch" method="post" action="">
+        <input type="text" id="testId">
+        <input type="text" id="testNm">
+        <input type="button" onclick = "clickEvent();" value="버튼">
+      </form>
+    </div>
+
+    <div><p></p>
+      <form name="frmSearch2" method="post" action="">
+        <input type="text" id="testId">
+        <input type="text" id="testNm">      
+        <input type="text" id="rmk">
+        <input type="text" id="rmk2">
+      </form>  
+    </div>
+    
+    <div><p></p>
+      <form name="frmSearch3" method="post" action="">
+        <input type="text" id="testId">
+        <input type="text" id="testNm">        
+        <input type="text" id="rmk">
+        <input type="text" id="rmk2">      
+      </form> 
+    </div>
+
+  </body>
+
+  <script src="./js/common.js"></script>
+  
+  <script>
+    // 콜백 event 호출
+    function clickEvent(){
+      let reqParams = new Object();
+
+      // form object들을 json 데이터로 변환
+      reqParams = this.fnSetObjtoJson(this.frmSearch);
+
+      this.fnCmnPrc(this.frmSearch2, reqParams, function fnCallBack(resData){
+        
+        // 요청 데이터 처리후 응답처리.
+        for(key in resData) {
+          this.fnSetData(frmSearch3, key, resData[key]);
+        } 
+
+      });
+    }  
+
+    function fnChangeEvent(){
+      //console.log("fnChangeEvent>>>");
+      clickEvent();
+    }
+
+    this.fnAddEventListener(this.frmSearch, "testId", "change", "fnChangeEvent");
+    this.fnAddEventListener(this.frmSearch, "testNm", "change", "fnChangeEvent");
+    /*
+    this.fnAddEventListener(this.frmSearch, "testId", "keyup", function fnCallBack(event){
+
+      if ( event == "13"){
+        clickEvent();
+      }
+
+    });
+    */
+
+
+  </script>
+</html>

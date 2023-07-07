@@ -2,74 +2,148 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>My test page</title>
+    <title> 입금하세요. 1회 사용시 커피 값 </title>
   </head>
   <body>
-    <div>
-      <form name="frmSearch" method="post" action="">
-        <input type="text" id="testId">
-        <input type="text" id="testNm">
-        <input type="button" onclick = "clickEvent();" value="버튼">
-      </form>
-    </div>
-
-    <div><p></p>
-      <form name="frmSearch2" method="post" action="">
-        <input type="text" id="testId">
-        <input type="text" id="testNm">      
-        <input type="text" id="rmk">
-        <input type="text" id="rmk2">
-      </form>  
-    </div>
     
-    <div><p></p>
-      <form name="frmSearch3" method="post" action="">
-        <input type="text" id="testId">
-        <input type="text" id="testNm">        
-        <input type="text" id="rmk">
-        <input type="text" id="rmk2">      
-      </form> 
-    </div>
+    <label>( 0~9 ) 숫자를 입력 후 선택하세요.</label>&nbsp;<input type="input" id="inputVal"onfocus="this.select()"><br>
+    <div id="textArea"></div>
 
   </body>
-
-  <script src="./js/common.js"></script>
-  
   <script>
-    // 콜백 event 호출
-    function clickEvent(){
-      let reqParams = new Object();
 
-      // form object들을 json 데이터로 변환
-      reqParams = this.fnSetObjtoJson(this.frmSearch);
+    // 랜덤 숫자 함수.
+    let ranVal = 0;
 
-      this.fnCmnPrc(this.frmSearch2, reqParams, function fnCallBack(resData){
+    // 틀린 횟수
+    let diffCnt = 0;
+
+    // 리스트 메인 타이틀
+    let arrMain = [
+      "개발본부 인사고과",
+      "기타"
+    ]
+
+    // 리스트 서브 타이틀 및 url 링크
+    let arrSubLinkUrl = [
+      [
+        {
+          subTitle : "개발팀 인원 현황"
+        , subLink  : "https://docs.google.com/spreadsheets/d/1i0KH-i5bwu93doUC3Y_Zx0-hvMmMwhqo_1YtP0sWCPw/edit?usp=sharing"
         
-        // 요청 데이터 처리후 응답처리.
-        for(key in resData) {
-          this.fnSetData(frmSearch3, key, resData[key]);
-        } 
+        },
+        {
+          subTitle : "2022상반기 개발본부 인사고과"
+        , subLink  : "https://docs.google.com/spreadsheets/d/1t177txZqkHmLuNq5Ch3Demr-trJPXfpB0Rd2lN0Qwio/edit?usp=sharing"
+        },
+        {
+          subTitle : "2022하반기 개발본부 인사고과"
+        , subLink  : "https://docs.google.com/spreadsheets/d/13gbQT_c2lVtksPBjb__wxKutzWHuS-B0XXi05l6onfA/edit?usp=sharing"
+        },
+        {
+          subTitle : "2023상반기 개발본부 인사고과"
+        , subLink  : "https://docs.google.com/spreadsheets/d/12YwjL39xRowfF-z9qjyLqHFv259yfNm4NcaNrXISnsI/edit?usp=sharing"
+                      
+        },                              
+      ],
+      [
+      {
+          subTitle : "개발본부 일별보고 월별 취합"
+        , subLink  : "./devTeamDaily.html"
+        },
+        {
+          subTitle : "테이블정의서 생성 스크립트 다운로드"
+        , subLink  : "./tableCreateScript.html"
+        },          
+      ]
+    ];
+   
+    // 페이지 이동 함수.
+    function goPage(index){
 
-      });
-    }  
+      let inputVal = document.getElementById('inputVal').value;
 
-    function fnChangeEvent(){
-      //console.log("fnChangeEvent>>>");
-      clickEvent();
-    }
-
-    this.fnAddEventListener(this.frmSearch, "testId", "change", "fnChangeEvent");
-    this.fnAddEventListener(this.frmSearch, "testNm", "change", "fnChangeEvent");
-    /*
-    this.fnAddEventListener(this.frmSearch, "testId", "keyup", function fnCallBack(event){
-
-      if ( event == "13"){
-        clickEvent();
+      if ( inputVal == "y" || inputVal == "Y" ){
+        inputVal = ranVal;
       }
 
-    });
-    */
+      if ( inputVal == "x" || inputVal == "X" ){
+        alert("힝! 속았지");
+        return;
+      }
 
+
+      if ( ranVal != inputVal ){
+        if ( diffCnt == 0 ){
+          alert("숫자를 맞춰야 사용이 가능합니다.");
+        }else if ( diffCnt == 1 ){
+          alert("사용료 입금하면 사용이 가능합니다.");
+        }else if ( diffCnt == 2 ){
+          alert("사용료 입금이 안되었어요.");
+        }else if ( diffCnt == 3 ){
+          alert("사용료 입금먼저 하세요.");
+        }else{
+          alert("X를 입력해보세요.");
+        }              
+        
+        diffCnt++;
+        return;
+      }
+
+      if ( index.substr(0,1) == "0"){
+        fnSetRanVal();        
+        if ( index.substr(1,1) != "0"){
+          return;
+        }
+        window.open(arrSubLinkUrl[index.substr(0,1)][index.substr(1,1)].subLink);
+      }else{
+        fnSetRanVal();        
+        location.href = arrSubLinkUrl[index.substr(0,1)][index.substr(1,1)].subLink;
+      }
+    }
+
+    // 리스트 만들기.
+    function fnSetPageList(){
+
+      let createScript = "";
+      let tooltip = "입금하세요. 1회 클릭시 커피 값";
+
+      var textArea = document.getElementById("textArea");
+
+      createScript = "<ul>";
+      // 배열을 돌면서 html 태그를 생성한다.
+      for( var i=0; i<arrMain.length; i++){
+
+        // 타이틀
+        createScript += "<li>" + i +"." + arrMain[i];
+        
+        // 리스트
+        createScript += "<ol>";
+        for ( var j=0; j<arrSubLinkUrl[i].length; j++){
+          createScript += "<li title='"+tooltip+"''><a href=javascript:goPage('"+i+j+"');>"+i+j+". "+ arrSubLinkUrl[i][j].subTitle +"</a></li>";
+        }
+        createScript += "</ol>";
+
+        createScript += "</li>";
+      }
+      createScript += "</ul>";
+      
+      textArea.innerHTML = createScript;
+    }
+
+
+    // 랜덤 숫자 셋팅
+    function fnSetRanVal(){
+      ranVal = Math.floor(Math.random() * 10);
+    }
+
+    fnSetPageList();
+
+    fnSetRanVal();
 
   </script>
+
+  <style>
+
+  </style>  
 </html>

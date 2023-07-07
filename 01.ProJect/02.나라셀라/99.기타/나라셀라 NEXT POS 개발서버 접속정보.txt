@@ -1,0 +1,43 @@
+나라셀라 NEXT POS 개발서버 접속정보
+TR 
+IP : 140.238.21.87
+
+hostname: dev_naracellar_next_pos
+
+ports:
+      - '22022:22'
+      - '22080:80'
+      - '22090:9090'
+
+volumes:
+      - /home/nara/volumes/home:/home/
+      - /home/nara/volumes/data:/DATA/
+
+TNS :
+NARA_NEXT_POS =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 10.0.0.8)(PORT = 22015))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = xe)
+    )
+  )
+
+DB
+IP : 140.238.21.87
+
+hostname: dev_naracellar_next_db
+
+ports:
+      - '22015:1521'
+
+volumes:
+      - /home/nara/volumes/DB_DATA:/DATA/
+
+DB 서버 접근 방법
+- 140.238.21.87 / root 계정으로 접속 후
+- dexe dev_naracellar_next_db bash
+sys 계정 접속 방법
+sqlplus sys as sysdba
+password : oracle
+
