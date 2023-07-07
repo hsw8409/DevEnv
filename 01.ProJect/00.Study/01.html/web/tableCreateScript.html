@@ -339,6 +339,51 @@
     document.getElementById('spaceIdx').value = spaceNm+"_IDX";
 
   }
+
+
+  function tableStructure(){
+
+    let strQuery = "";
+
+    var textArea = document.getElementById("textArea");
+
+    strQuery  = "SELECT A.TABLE_NAME                                                      "+"<br>";
+    strQuery += "     , B.COMMENTS          AS TABLE_COMMENT                              "+"<br>";
+    strQuery += "     , C.COLUMN_ID                                                       "+"<br>";
+    strQuery += "     , C.COLUMN_NAME                                                     "+"<br>";
+    strQuery += "     , D.COMMENTS          AS COLUMN_COMMENT                             "+"<br>";
+    strQuery += "     , C.DATA_TYPE         AS TYPE                                       "+"<br>";
+    strQuery += "     , C.DATA_LENGTH       AS LENGTH                                     "+"<br>";
+    strQuery += "     , C.NULLABLE                                                        "+"<br>";
+    strQuery += "     , CASE WHEN ( SELECT COUNT(*)                                       "+"<br>";
+    strQuery += "                     FROM ALL_CONSTRAINTS X                              "+"<br>";
+    strQuery += "                        , ALL_CONS_COLUMNS Y                             "+"<br>";
+    strQuery += "                    WHERE Y.TABLE_NAME = X.TABLE_NAME                    "+"<br>";
+    strQuery += "                      AND Y.OWNER = X.OWNER                              "+"<br>";
+    strQuery += "                      AND Y.CONSTRAINT_NAME = X.CONSTRAINT_NAME          "+"<br>";
+    strQuery += "                      AND X.CONSTRAINT_TYPE = 'P'                        "+"<br>";
+    strQuery += "                      AND X.TABLE_NAME = A.TABLE_NAME                    "+"<br>";
+    strQuery += "					  AND Y.COLUMN_NAME = C.COLUMN_NAME                             "+"<br>";
+    strQuery += "                 ) > 0 THEN 'Y' ELSE 'N' END                      AS PK  "+"<br>";
+    strQuery += "     , CASE WHEN C.DATA_TYPE = 'DATE' THEN C.DATA_TYPE                   "+"<br>";
+    strQuery += "            WHEN C.DATA_TYPE LIKE 'TIMESTAMP%' THEN C.DATA_TYPE          "+"<br>";
+    strQuery += "       ELSE C.DATA_TYPE || '(' ||C.DATA_LENGTH||')'                      "+"<br>";
+    strQuery += "       END AS TYPE_DESC                                                  "+"<br>";
+    strQuery += "     , C.DATA_DEFAULT AS TYPE_DESC                                       "+"<br>";    
+    strQuery += "  FROM ALL_TABLES A                                                      "+"<br>";
+    strQuery += "     , ALL_TAB_COMMENTS B                                                "+"<br>";
+    strQuery += "     , ALL_TAB_COLUMNS  C                                                "+"<br>";
+    strQuery += "     , ALL_COL_COMMENTS D                                                "+"<br>";
+    strQuery += " WHERE B.TABLE_NAME = A.TABLE_NAME                                       "+"<br>";
+    strQuery += "   AND C.TABLE_NAME = A.TABLE_NAME                                       "+"<br>";
+    strQuery += "   AND D.TABLE_NAME = A.TABLE_NAME                                       "+"<br>";
+    strQuery += "   AND D.COLUMN_NAME = C.COLUMN_NAME                                     "+"<br>";
+    strQuery += "   AND A.OWNER = :OWNER                                                  "+"<br>";
+    strQuery += " ORDER BY A.TABLE_NAME, C.COLUMN_ID                                      "+"<br>";
+    strQuery += ";";
+
+    textArea.innerHTML = strQuery;
+  }
 </script>
 
 <style>
@@ -356,6 +401,7 @@
   <label>테이블스페이스(IDX)</label>&nbsp;<input type="input" id="spaceIdx" value ="NARACELLAR_IDX" title="테이블스페이스(IDX)" onfocus="this.select()"><br>
 
   <input type="button" id="id_sample_download" onclick="excelFileExport()" value ="양식 다운로드"/>&nbsp;
+  <input type="button" id="id_sample_download" onclick="tableStructure()" value ="테이블정의서데이터 스크립트"/>&nbsp;
 	<input type="file" id="id_file_upload" onchange="upload(event)"/><br/>
   <label>다운로드 파일 확장자</label>
   <select id="saveType">
