@@ -5,8 +5,9 @@
     <title> 입금하세요. 1회 사용시 커피 값 </title>
   </head>
   <body>
-    
+    <!--
     <label>( 0~9 ) 숫자를 입력 후 선택하세요.</label>&nbsp;<input type="input" id="inputVal"onfocus="this.select()"><br>
+    -->
     <div id="textArea"></div>
 
   </body>
@@ -60,7 +61,7 @@
    
     // 페이지 이동 함수.
     function goPage(index){
-
+      /*
       let inputVal = document.getElementById('inputVal').value;
 
       if ( inputVal == "y" || inputVal == "Y" ){
@@ -89,15 +90,18 @@
         diffCnt++;
         return;
       }
+      */
 
       if ( index.substr(0,1) == "0"){
+        /*
         fnSetRanVal();        
         if ( index.substr(1,1) != "0"){
           return;
         }
+        */
         window.open(arrSubLinkUrl[index.substr(0,1)][index.substr(1,1)].subLink);
       }else{
-        fnSetRanVal();        
+        //fnSetRanVal();        
         location.href = arrSubLinkUrl[index.substr(0,1)][index.substr(1,1)].subLink;
       }
     }

@@ -4,130 +4,172 @@
 <meta charset="UTF-8">
 <title>그룹웨어 일별보고 엑셀 업로드</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
 <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 <script>
 
-	function upload(event) {
+  // 엑셀 양식 다운로드 타이틀.
+  const arrHeader = ["담당자", "년월", "중분류", "소분류", "소계"];
 
-        // 월, 프로젝트, M/D계
-        let subData = [];
+  // 월, 프로젝트, M/D계
+  let subData = [];  
 
-		var input = event.target;
-		var reader = new FileReader();
+  function download(){
 
-		reader.onload = function() { 
+    const wb = XLSX.utils.book_new();
+    
+    // 엑셀 양식의 타이틀 부분
+    let excelData = [];
+    let header = [];
+    let body = [];
+    let headerInfo = new Object();
 
-			var fdata = reader.result;
 
-			var read_buffer = XLSX.read(fdata, {type : 'binary'});
+    for ( var i=0; i<arrHeader.length; i++){
+
+      headerInfo = new Object();
+
+      headerInfo = arrHeader[i];
+      header.push(headerInfo);
+    }
+    excelData.push(header);
+
+    console.log(subData);
+
+    for ( var j=0; j<subData.length; j++){
+
+        let bodyInfo = [];
+
+        bodyInfo[0] = subData[j].userNm;
+        bodyInfo[1] = subData[j].months;
+        bodyInfo[2] = subData[j].mClass;
+        bodyInfo[3] = subData[j].sClass;
+        bodyInfo[4] = subData[j].work;
+
+        excelData.push(bodyInfo);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+    XLSX.utils.book_append_sheet(wb, ws, 'sheet1');
+
+    XLSX.writeFile(wb, 'result.xlsx');
+
+  }
+
+  function upload(event) {
+
+    var input = event.target;
+    var reader = new FileReader();
+
+    reader.onload = function() { 
+
+      var fdata = reader.result;
+
+      var read_buffer = XLSX.read(fdata, {type : 'binary'});
 			
-			var xlsArea = document.getElementById("xlsArea");
+      var xlsArea = document.getElementById("xlsArea");
 
-			var tableStr = "<table style='border:1px solid;'>";
+      var tableStr = "<table style='border:1px solid;'>";
 			
-			read_buffer.SheetNames.forEach(function(sheetName) {
-				var rowdata = XLSX.utils.sheet_to_json(read_buffer.Sheets[sheetName]);
+      read_buffer.SheetNames.forEach(function(sheetName) {
+        var rowdata = XLSX.utils.sheet_to_json(read_buffer.Sheets[sheetName]);
 				
-				$.each(rowdata, function(i, coldata){
-					//console.log(rowdata);
+        $.each(rowdata, function(i, coldata){
+          //console.log(rowdata);
                     
-                    let subObj = new Object();
+          let subObj = new Object();
 
-					//엑셀 Header 세팅
-					if(i == 0){
-						tableStr += "<tr>";
-						$.each(coldata, function(colHeader, colText){
-							tableStr += "<th style='color:red;width:500px;border:1px solid;'>" + colHeader + "<th>";
-						});
-						tableStr += "</tr>";
-					}
-                    //엑셀 내용 세팅
-                    tableStr += "<tr>";
-                    $.each(coldata, function(colHeader, colText){
-                        tableStr += "<td style='border:1px solid;'>" + colText + "<td>";
-                        //console.log("["+colHeader + "]/[" + colText + "]");
-                        
-                        //소계
-                        if ( colHeader == "담당자" || colHeader == "업무일" || colHeader == "중분류" || colHeader == "소분류" || colHeader == "M/D" ){
-                            if ( colHeader == "담당자"){
-                                subObj.userNm = colText;
-                            }else if ( colHeader == "업무일"){
-                                // 슬러시 제거
-                                colText = colText.replaceAll('/', '').substr(0,6);
-                                subObj.months = colText;
-                            }else if ( colHeader == "중분류"){
-                                subObj.mClass = colText;
-                            }else if ( colHeader == "소분류"){
-                                subObj.sClass = colText;
-                            }else if ( colHeader == "M/D"){
-                                subObj.work = colText;
-                            }
-                        }                            
-                    });
-                    tableStr += "</tr>";
-
-                    //console.log(subObj.months);
-
-                    var findData = subData.findIndex(e => e.userNm === subObj.userNm && e.months === subObj.months && e.mClass === subObj.mClass && e.sClass === subObj.sClass ) ;
-                    //console.log(findData);                    
-                    if ( findData == -1 ){
-                        subData.push(subObj);
-                    }else{
-                        subData[findData].work = Number(subData[findData].work) + Number(subObj.work);
-                    }                    
-				});
-			});
-			tableStr += "</table>";
-			xlsArea.innerHTML = tableStr;
-
-            // 소계 
-            // 담당자 순으로 정렬.
-            subData.sort(function(a, b) {
-                var userNmA = a.userNm.toUpperCase();
-                var userNmB = b.userNm.toUpperCase();
-                if (userNmA < userNmB) {
-                    return -1;
-                }
-                if (userNmA > userNmB) {
-                    return 1;
-                }
-                return 0;
+          //엑셀 Header 세팅
+          if(i == 0){
+            tableStr += "<tr>";
+            $.each(coldata, function(colHeader, colText){
+              tableStr += "<th style='color:red;width:500px;border:1px solid;'>" + colHeader + "<th>";
             });
+            tableStr += "</tr>";
+          }
+          
+          //엑셀 내용 세팅
+          tableStr += "<tr>";
+          $.each(coldata, function(colHeader, colText){
+            tableStr += "<td style='border:1px solid;'>" + colText + "<td>";
+            //console.log("["+colHeader + "]/[" + colText + "]");
+                        
+            //소계
+            if ( colHeader == "담당자" || colHeader == "업무일" || colHeader == "중분류" || colHeader == "소분류" || colHeader == "M/D" ){
+              if ( colHeader == "담당자"){
+                subObj.userNm = colText;
+              }else if ( colHeader == "업무일"){
+                // 슬러시 제거
+                colText = colText.replaceAll('/', '').substr(0,6);
+                subObj.months = colText;
+              }else if ( colHeader == "중분류"){
+                subObj.mClass = colText;
+              }else if ( colHeader == "소분류"){
+                subObj.sClass = colText;
+              }else if ( colHeader == "M/D"){
+                subObj.work = colText;
+              }
+            }                            
+          });
+          tableStr += "</tr>";
 
+          //console.log(subObj.months);
 
-            var subArea = document.getElementById("subArea");
-            var tableStrSub  = "<table style='border:1px solid;'>"; 
-                tableStrSub += "<tr>";
-                tableStrSub += "<td style='color:red;width:12%;border:1px solid;'>담당자<th>";
-                tableStrSub += "<td style='color:red;width:10%;border:1px solid;'>년월<th>";
-                tableStrSub += "<td style='color:red;width:30%;border:1px solid;'>중분류<th>";
-                tableStrSub += "<td style='color:red;width:40%;border:1px solid;'>소분류<th>";                
-                tableStrSub += "<td style='color:red;width:8%;border:1px solid;'>소계<th>";
-                tableStrSub += "</tr>";    
-                //console.log(subData.length);
+          var findData = subData.findIndex(e => e.userNm === subObj.userNm && e.months === subObj.months && e.mClass === subObj.mClass && e.sClass === subObj.sClass ) ;
+          //console.log(findData);                    
+          if ( findData == -1 ){
+            subData.push(subObj);
+          }else{
+            subData[findData].work = Number(subData[findData].work) + Number(subObj.work);
+          }                    
+        });
+      });
+      tableStr += "</table>";
+      xlsArea.innerHTML = tableStr;
 
-                for ( var i=0; i<subData.length; i++){
-                    tableStrSub += "<tr>";                    
-                    tableStrSub += "<td style='border:1px solid;'>" + subData[i].userNm + "<td>";
-                    tableStrSub += "<td style='border:1px solid;'>" + subData[i].months + "<td>";
-                    tableStrSub += "<td style='border:1px solid;'>" + subData[i].mClass + "<td>";
-                    tableStrSub += "<td style='border:1px solid;'>" + subData[i].sClass + "<td>";
-                    tableStrSub += "<td style='border:1px solid;'>" + subData[i].work   + "<td>";
-                    tableStrSub += "</tr>";                                
-                }
-                tableStrSub += "</table>";                                                    
+      // 소계 
+      // 담당자 순으로 정렬.
+      subData.sort(function(a, b) {
+        var userNmA = a.userNm.toUpperCase();
+        var userNmB = b.userNm.toUpperCase();
+        if (userNmA < userNmB) {
+          return -1;
+        }
+        if (userNmA > userNmB) {
+          return 1;
+        }
+        return 0;
+      });
 
+      var subArea = document.getElementById("subArea");
+      var tableStrSub  = "<table style='border:1px solid;'>"; 
+          tableStrSub += "<tr>";
+          tableStrSub += "<td style='color:red;width:12%;border:1px solid;'>담당자<th>";
+          tableStrSub += "<td style='color:red;width:10%;border:1px solid;'>년월<th>";
+          tableStrSub += "<td style='color:red;width:30%;border:1px solid;'>중분류<th>";
+          tableStrSub += "<td style='color:red;width:40%;border:1px solid;'>소분류<th>";                
+          tableStrSub += "<td style='color:red;width:8%;border:1px solid;'>소계<th>";
+          tableStrSub += "</tr>";    
+          
+      //console.log(subData.length);
 
+      for ( var i=0; i<subData.length; i++){
+          tableStrSub += "<tr>";                    
+          tableStrSub += "<td style='border:1px solid;'>" + subData[i].userNm + "<td>";
+          tableStrSub += "<td style='border:1px solid;'>" + subData[i].months + "<td>";
+          tableStrSub += "<td style='border:1px solid;'>" + subData[i].mClass + "<td>";
+          tableStrSub += "<td style='border:1px solid;'>" + subData[i].sClass + "<td>";
+          tableStrSub += "<td style='border:1px solid;'>" + subData[i].work   + "<td>";
+          tableStrSub += "</tr>";                                
+      }
+      tableStrSub += "</table>";                                                    
 
-            //console.log(tableStrSub);
-            subArea.innerHTML = tableStrSub;
-		};
-		reader.readAsBinaryString(input.files[0]);
-
-
-
-
-	}
+      //console.log(tableStrSub);
+      subArea.innerHTML = tableStrSub;
+	};
+    reader.readAsBinaryString(input.files[0]);
+  }
 </script>
 
 <style>
@@ -139,11 +181,11 @@
 
 </head>
 <body>
-	<input type="file" id="id_file_upload" onchange="upload(event)"/><br/>
+	<input type="file" id="id_file_upload" onchange="upload(event)"/> '일별보고에서 다운 받은 파일을 .xlsx' 확장자로 변환 후 선택해주세요. <br/>
+    <input type="button" id="id_sample_download" onclick="download()" value ="소계 결과 다운로드"/>
 	<br />
 	<div id="xlsArea" style="width:60%;"></div>
     <div id="space"> </div>
     <div id="subArea" style="width:40%;"></div>
-    '.XLSX' 확장자로 변환 후 선택해주세요.
 </body>
 </html>

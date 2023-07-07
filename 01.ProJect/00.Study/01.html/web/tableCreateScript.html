@@ -33,55 +33,24 @@
   function excelFileExport() {
     const wb = XLSX.utils.book_new();
     
-    // 엑셀 양식의 타이틀 부분 스타일 적용.
+    let excelData = [];
+
+    // 엑셀 양식의 타이틀 부분
     let header = [];
-/*
-    header = [
-      {
-        v:"TABLE_NAME"
-      , t:"s"
-      , s:{
-          font : {
-            bold:true
-          , sz:'20'
-          }
-        }
-      }
-    ]
-*/    
 
     for ( var i=0; i<arrHeader.length; i++){
 
       let headerInfo = new Object();
-
-      // style
-      let sInfo = new Object();
-
-      // font
-      let fontInfo = new Object();
-
-      headerInfo.v = arrHeader[i];
-      headerInfo.t = "s";
-      
-      fontInfo.bold = true;
-      fontInfo.sz = "100";
-
-      sInfo.font = fontInfo;
-      
-      headerInfo.s = sInfo;
-
+      headerInfo = arrHeader[i];
       header.push(headerInfo);
     }
 
-    // 엑셀 양식의 목록 부분 스타일 적용.
-    let body = [
-
-    ]
+    excelData.push(header);
 
     // 스타일을 적용
-    const ws = XLSX.utils.aoa_to_sheet([header, body]);
+    const ws = XLSX.utils.aoa_to_sheet(excelData);
 
-    XLSX.utils.book_append_sheet(wb, ws, 'readme demo');
+    XLSX.utils.book_append_sheet(wb, ws, 'sheet1');
 
     XLSX.writeFile(wb, 'sample.xlsx');
   }
