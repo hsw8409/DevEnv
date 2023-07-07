@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <title> 엑셀 파일로 스크립트 생성</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
 <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 <script>
 
+  const arrHeader = ["TABLE_NAME", "TABLE_COMMENT", "COLUMN_ID", "COLUMN_NAME", "COLUMN_COMMENT", "TYPE", "LENGTH", "NULLABLE", "PK", "TYPE_DESC", "DEFAULT"];
   const arrLpad = [4];
   // 자릿수 채울 길이 : 컬럼명, 컬럼desc, nullable, pk, coment_column
   const arrRpad = [30,15,15,60];
@@ -25,16 +27,80 @@
     return rtn;
   }
 
-  // 파일 다운로드
+  // 양식 다운로드
+  function excelFileExport() {
+
+    const wb = XLSX.utils.book_new();
+    
+    let header = [];
+/*
+    header = [
+      {
+        v:"TABLE_NAME"
+      , t:"s"
+      , s:{
+          font : {
+            bold:true
+          , sz:'20'
+          }
+        }
+      }
+    ]
+*/    
+
+    for ( var i=0; i<arrHeader.length; i++){
+
+      let headerInfo = new Object();
+
+      let sInfo = new Object();
+      let fontInfo = new Object();
+
+      
+      headerInfo.v = arrHeader[i];
+      headerInfo.t = "s";
+      
+      fontInfo.bold = true;
+      fontInfo.sz = "100";
+
+      sInfo.font = fontInfo;
+      
+      headerInfo.s = sInfo;
+
+      header.push(headerInfo);
+
+    }
+
+    let body = [
+
+    ]
+
+    const ws = XLSX.utils.aoa_to_sheet([header, body]);
+
+    XLSX.utils.book_append_sheet(wb, ws, 'readme demo');
+
+    XLSX.writeFile(wb, 'sample.xlsx');
+
+  }
+
+
+  // (text or sql ) 파일 다운로드
   function download(){
 
     let textArea = document.getElementById('textArea').innerText;
+/*
+    console.log("변경전>"+textArea);
+    textArea = textArea.replace(/&nbsp;/gi, " ");
+
+    console.log("변경후>"+textArea);
+*/
+
     let sel = document.getElementById('saveType');
     
     var saveType = sel.options[sel.selectedIndex].value;  // 선택한 파일 확장자
 
     var link = document.createElement('a');
-    link.setAttribute('download', "crdQuery."+saveType);
+
+    link.setAttribute('download', "createTableScript."+saveType);
     link.setAttribute('href', 'data:' + "application/text"  +  ';charset=utf-8,' + encodeURIComponent(textArea));
     link.click();    
   }
@@ -46,7 +112,8 @@
 
     // 공백인 경우 html tag 로 변환.
     if ( padStr == ""){
-      padStr = "&nbsp;";
+      //padStr = "&nbsp;";
+      padStr = " ";
     }
 
     if ( rtn.length < len ){
@@ -65,7 +132,8 @@
     
     // 공백인 경우 html tag 로 변환.
     if ( padStr == ""){
-      padStr = "&nbsp;";
+      //padStr = "&nbsp;";
+      padStr = " ";
     }    
 
     if ( rtn.length < len ){
@@ -76,7 +144,7 @@
 
     return rtn;
   }
-  
+
 
   // 테이블 전체 스크립트 생성
   // 배열순번, obj
@@ -85,7 +153,9 @@
     let rtn = [];
     // 시작
     rtn[0]  = "<p>";    
-    rtn[0] += " /* " + obj.TABLE_NAME + " */";
+    rtn[0] += " /* " + obj.TABLE_NAME + " */" ;
+    rtn[0] += "<p>";    
+    rtn[0] += "DROP TABLE " + obj.TABLE_NAME + " PURGE;";
     rtn[0] += "<p>";
     rtn[0] += "CREATE TABLE " + obj.TABLE_NAME + "<br>";
     rtn[0] += "(" + "<br>";
@@ -102,7 +172,7 @@
     
     // 컬럼 desc
     if ( obj.COLUMN_ID == "1"){
-      rtn = "&nbsp;&nbsp;" + rPad(obj.COLUMN_NAME ,arrRpad[0] ,"") + " " + rPad(obj.TYPE_DESC ,arrRpad[1] ,"");
+      rtn = "  " + rPad(obj.COLUMN_NAME ,arrRpad[0] ,"") + " " + rPad(obj.TYPE_DESC ,arrRpad[1] ,"");
     }else{
       rtn = ", "           + rPad(obj.COLUMN_NAME ,arrRpad[0] ,"") + " " + rPad(obj.TYPE_DESC ,arrRpad[1] ,"");
     }
@@ -143,9 +213,18 @@
       rtn += "<p>";
     }else if ( type == "2"){
       if ( str != "") {
+        
+        // 테이블명이 너무 길어서 pk index 생성시 오류 발생.
+        // 'IF_' -> '' 치환.
+        if( tblName.length > 27){
+          tblName = tblName.substr(1,27);
+        }
+        
+
+
         rtn = ", CONSTRAINT PK_" + tblName + " PRIMARY KEY (" + "<br>";
-        rtn += "&nbsp;&nbsp;&nbsp;&nbsp;"+ str + "<br>";
-        rtn += "&nbsp;&nbsp;) USING INDEX TABLESPACE " + spaceIdx + " VALIDATE " + "<br>";
+        rtn += "    "+ str + "<br>";
+        rtn += "  ) USING INDEX TABLESPACE " + spaceIdx + " VALIDATE " + "<br>";
       }
     }
 
@@ -192,7 +271,8 @@
           let colData = new Object();
 
           $.each(coldata, function(colHeader, colText){
-            
+
+            // 테이블물리명, 테이블논리명, 컬럼순번, 컬럼물리명, 컬럼논리명, 데이터타입, 길이, NULL허용여부, PK여부, 데이터타입(DESC), DEFAULT.
             if ( colHeader == "TABLE_NAME"){
               colData.TABLE_NAME = colText;
             }else if( colHeader == "TABLE_COMMENT"){
@@ -494,7 +574,7 @@
     let spaceNm = document.getElementById('spaceNm').value;
 
     document.getElementById('spaceDat').value = spaceNm+"_DAT";
-    document.getElementById('spaceIdx').value = spaceNm+"_IX";
+    document.getElementById('spaceIdx').value = spaceNm+"_IDX";
 
   }
 </script>
@@ -503,21 +583,26 @@
 
     div{
         float:left;
+        white-space:pre;
     }
 </style>
 
 </head>
 <body>
-  <label>테이블스페이스 별칭</label>&nbsp;<input type="input" id="spaceNm" value ="TEST" title="테이블스페이스 별칭" onfocus="this.select()" oninput="fnChgSpace(event);"><br>
-  <label>테이블스페이스(DAT)</label>&nbsp;<input type="input" id="spaceDat" value ="TEST_DAT" title="테이블스페이스(DAT)" onfocus="this.select()"><br>
-  <label>테이블스페이스(IDX)</label>&nbsp;<input type="input" id="spaceIdx" value ="TEST_DAT" title="테이블스페이스(IDX)" onfocus="this.select()"><br>
+  <label>테이블스페이스 별칭</label>&nbsp;<input type="input" id="spaceNm" value ="NARACELLAR" title="테이블스페이스 별칭" onfocus="this.select()" oninput="fnChgSpace(event);"><br>
+  <label>테이블스페이스(DAT)</label>&nbsp;<input type="input" id="spaceDat" value ="NARACELLAR_DAT" title="테이블스페이스(DAT)" onfocus="this.select()"><br>
+  <label>테이블스페이스(IDX)</label>&nbsp;<input type="input" id="spaceIdx" value ="NARACELLAR_IDX" title="테이블스페이스(IDX)" onfocus="this.select()"><br>
+
+  <input type="button" id="id_sample_download" onclick="excelFileExport()" value ="양식 다운로드"/>&nbsp;
 	<input type="file" id="id_file_upload" onchange="upload(event)"/><br/>
-  <label>파일 확장자</label>
+  <label>다운로드 파일 확장자</label>
   <select id="saveType">
     <option value="sql">SQL(.sql)</option>    
     <option value="text">텍스트(.text)</option>
   </select>  
   <input type="button" id="id_file_download" onclick="download()" value ="실행 쿼리 다운로드"/><br/>
+
+  
 	<br />
 	<div id="textArea">테이블 정의서 파일 선택 해주세요.</div>
 </body>
