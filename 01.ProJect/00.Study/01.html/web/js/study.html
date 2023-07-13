@@ -33,7 +33,8 @@
 
   </body>
 
-  <script src="./js/common.js"></script>
+  <script src="./../js/common.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   
   <script>
     // 콜백 event 호출
@@ -70,6 +71,38 @@
     });
     */
 
+    function ajaxTest(){
+      let param = { '_SERVICE_':'core.SYAT0010Service'
+                  , ' _METHOD_':'search'
+                  , ' _BROWSER_':'NEXACRO'
+                  , ' _PGM_ID_':'SYAT0010'
+      };
+
+      $.ajax({
+
+		    type: 'post',   //get방식으로 명시
+		    //url : 'http://125.129.62.49:9999/cm/main/nexa/core.SYCM0001Service.login',  //이동할 jsp 파일 주소
+        url : 'http://125.129.62.49:9999/cm/main/nexa/core.SYAT0010Service/search.nexa',  //이동할 jsp 파일 주소
+		    dataType:'json',   //문자형식으로 받기
+        data :param,
+		    success: function(data){   //데이터 주고받기 성공했을 경우 실행할 결과
+            //function(data)를 쓰게 되면 전달받은 데이터가 data안에 담아서 들어오게 된다. 
+          console.log('success');
+			    console.log(data);   
+		    },
+		    error:function(request, status, error){   //데이터 주고받기가 실패했을 경우 실행할 결과
+          console.log("code: " + request.status)
+          console.log("message: " + request.responseText)
+          console.log("error: " + error);
+		    },
+        complete:function(){
+          console.log('complete');
+        }
+	    })
+    }
+
+
+    ajaxTest();
 
   </script>
 </html>
