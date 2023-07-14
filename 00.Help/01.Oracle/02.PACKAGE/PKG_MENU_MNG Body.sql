@@ -1,23 +1,44 @@
-create or replace PROCEDURE PR_MENU_CREATE ( V_SYS_FG          IN VARCHAR2  -- 시스템구분
-                                           , V_LCLS_ID         IN VARCHAR2  -- 대분류ID(메뉴)
-                                           , V_LCLS_NM         IN VARCHAR2  -- 대분류명(메뉴)
-                                           , V_MCLS_ID         IN VARCHAR2  -- 중분류ID(메뉴)
-                                           , V_MCLS_NM         IN VARCHAR2  -- 중분류명(메뉴)
-                                           , V_MENU_ID         IN VARCHAR2  -- 메뉴ID(메뉴)
-                                           , V_MENU_NM         IN VARCHAR2  -- 메뉴명(메뉴)
-                                           , V_SORT_ORD        IN NUMBER    -- 정렬순번
-                                           , V_PGM_ID          IN VARCHAR2  -- 프로그램ID(프로그램)
-                                           , V_PGM_NM          IN VARCHAR2  -- 프로그램명(프로그램)
-                                           , V_PGM_URL         IN VARCHAR2  -- 프로그램파일경로(프로그램)
-                                           , V_USER_ID         IN VARCHAR2  -- 메뉴 권한부여 사용자(메뉴)
-                                           )
-IS
+create or replace PACKAGE BODY PKG_MENU_MNG AS
+/******************************************************************************
+   NAME:        PKG_MENU_MNG
+   PURPOSE:     메뉴 관련 FUNCTION, PROCEDURE
+******************************************************************************/
 
-    C_LCLS_ID     TB_SY_MENU.MENU_ID%TYPE;     -- 대분류 메뉴ID
-    C_MCLS_ID     TB_SY_MENU.MENU_ID%TYPE;     -- 중분류 메뉴ID
-    C_MENU_ID     TB_SY_MENU.MENU_ID%TYPE;     -- 메뉴ID
-    C_PGM_ID      TB_SY_MENU.PGM_ID%TYPE;      -- 프로그램ID
-    C_UP_MENU_ID  TB_SY_MENU.UP_MENU_ID%TYPE;  -- 상위프로그램ID
+
+    /***************************************************************************
+      * PR_MENU_CRD                              -메뉴 생성
+    ***************************************************************************/
+
+    
+    /**************************************************************************
+    NAME:      PR_MENU_CRD
+    PURPOSE:   메뉴 생성    
+    REVISIONS:
+    Ver        Date        Coder            Description
+    ---------  ----------  ---------------  -----------------------------------
+    1.0        2023-07-14  한상우           1. Created
+    ***************************************************************************/
+    PROCEDURE PR_MENU_CRD (
+        vi_SysFg            IN VARCHAR2            -- 시스템 구분코드
+      , vi_LclsId           IN VARCHAR2            -- 대분류ID(메뉴)
+      , vi_LclsNm           IN VARCHAR2            -- 대분류명(메뉴)
+      , vi_MclsId           IN VARCHAR2            -- 중분류ID(메뉴)
+      , vi_MclsNm           IN VARCHAR2            -- 중분류명(메뉴)
+      , vi_MenuId           IN VARCHAR2            -- 메뉴ID(메뉴)
+      , vi_MenuNm           IN VARCHAR2            -- 메뉴명(메뉴)
+      , vi_SortOrd          IN NUMBER              -- 정렬분선
+      , vi_PgmId            IN VARCHAR2            -- 프로그램ID(프로그램)
+      , vi_PgmNm            IN VARCHAR2            -- 프로그램명(프로그램)
+      , vi_PgmUrl           IN VARCHAR2            -- 프로그램파일경로(프로그램)
+      , vi_UserId           IN VARCHAR2            -- 메뉴 권한부여 사용자(메뉴)
+    )
+    IS
+
+    C_LCLS_ID     TB_SY_MENU.MENU_ID     %TYPE;    -- 대분류 메뉴ID
+    C_MCLS_ID     TB_SY_MENU.MENU_ID     %TYPE;    -- 중분류 메뉴ID
+    C_MENU_ID     TB_SY_MENU.MENU_ID     %TYPE;    -- 메뉴ID
+    C_PGM_ID      TB_SY_MENU.PGM_ID      %TYPE;    -- 프로그램ID
+    C_UP_MENU_ID  TB_SY_MENU.UP_MENU_ID  %TYPE;    -- 상위프로그램ID
 
     C_ERR_CD  VARCHAR2(4);
     C_ERR_MSG VARCHAR2(4000);
@@ -34,10 +55,10 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE('>>>>>START>>>>>');
 
     C_ERR_CD  := '0010';
-    C_ERR_MSG := 'V_LCLS_NM::[' || V_LCLS_NM || ']';
+    C_ERR_MSG := 'vi_LclsNm::[' || vi_LclsNm || ']';
     
     -- 대분류        
-    IF V_LCLS_NM IS NOT NULL THEN 
+    IF vi_LclsNm IS NOT NULL THEN 
 
         DBMS_OUTPUT.PUT_LINE('>>>>>대분류 생성 시작 >>>>>');
 
@@ -51,8 +72,8 @@ BEGIN
               INTO C_LCLS_ID
               FROM TB_SY_MENU A
              WHERE 1=1
-               AND A.SYS_FG     = V_SYS_FG
-               AND A.MENU_NM    = V_LCLS_NM
+               AND A.SYS_FG     = vi_SysFg
+               AND A.MENU_NM    = vi_LclsNm
                AND A.UP_MENU_ID = 'MN00000'
             ;
 
@@ -68,14 +89,14 @@ BEGIN
 
             IF C_LCLS_ID IS NULL THEN 
 
-                IF V_LCLS_ID IS NULL THEN 
+                IF vi_LclsId IS NULL THEN 
                     SELECT 'MN'||LPAD(SQ_TB_SY_MENU_MENU_ID.NEXTVAL,5,'0')
                       INTO C_LCLS_ID
                       FROM DUAL
                     ;
                 ELSE
                     
-                    C_LCLS_ID := V_LCLS_ID;
+                    C_LCLS_ID := vi_LclsId;
 
                 END IF;
 
@@ -94,9 +115,9 @@ BEGIN
                 , UPDT_DTIME
                 )
                 VALUES
-                ( V_SYS_FG
+                ( vi_SysFg
                 , C_LCLS_ID
-                , V_LCLS_NM
+                , vi_LclsNm
                 , 'MN00000'
                 , 'Y'
                 , 'SYSTEM'
@@ -115,10 +136,10 @@ BEGIN
 
 
     C_ERR_CD  := '0020';
-    C_ERR_MSG := 'V_MCLS_NM::[' || V_MCLS_NM || ']';
+    C_ERR_MSG := 'vi_MclsNm::[' || vi_MclsNm || ']';
 
     -- 중분류
-    IF V_MCLS_NM IS NOT NULL THEN
+    IF vi_MclsNm IS NOT NULL THEN
 
         DBMS_OUTPUT.PUT_LINE('>>>>>중분류 생성 시작 >>>>>');
 
@@ -137,8 +158,8 @@ BEGIN
                  , C_UP_MENU_ID
               FROM TB_SY_MENU A
              WHERE 1=1
-               AND A.SYS_FG      = V_SYS_FG
-               AND A.MENU_NM     = V_MCLS_NM
+               AND A.SYS_FG      = vi_SysFg
+               AND A.MENU_NM     = vi_MclsNm
                AND A.UP_MENU_ID != 'MN00000'             
                AND A.PGM_ID     IS NULL
                AND A.UP_MENU_ID  = C_LCLS_ID            
@@ -155,7 +176,7 @@ BEGIN
 
             IF C_MCLS_ID IS NULL THEN                    
 
-                IF V_MCLS_ID IS NULL THEN
+                IF vi_MclsId IS NULL THEN
                     SELECT 'MN'||LPAD(SQ_TB_SY_MENU_MENU_ID.NEXTVAL,5,'0')
                       INTO C_MCLS_ID
                       FROM DUAL
@@ -163,7 +184,7 @@ BEGIN
                     
                 ELSE
                     
-                    C_MCLS_ID := V_MCLS_ID;
+                    C_MCLS_ID := vi_MclsId;
 
                 END IF;
 
@@ -183,9 +204,9 @@ BEGIN
                 , UPDT_DTIME
                 )
                 VALUES
-                ( V_SYS_FG
+                ( vi_SysFg
                 , C_MCLS_ID
-                , V_MCLS_NM
+                , vi_MclsNm
                 , C_LCLS_ID
                 , 'Y'
                 , 'SYSTEM'
@@ -204,10 +225,10 @@ BEGIN
 
 
     C_ERR_CD  := '0030';
-    C_ERR_MSG := 'V_MENU_NM::[' || V_MENU_NM || ']';
+    C_ERR_MSG := 'vi_MenuNm::[' || vi_MenuNm || ']';
 
     -- 메뉴
-    IF V_MENU_NM IS NOT NULL THEN
+    IF vi_MenuNm IS NOT NULL THEN
 
         DBMS_OUTPUT.PUT_LINE('>>>>>메뉴 생성 시작 >>>>>');
 
@@ -219,9 +240,9 @@ BEGIN
               INTO C_MENU_ID
               FROM TB_SY_MENU A
              WHERE 1=1
-               AND A.SYS_FG    = V_SYS_FG
-               AND A.MENU_NM   = V_MENU_NM
-               AND A.PGM_ID    = V_PGM_ID
+               AND A.SYS_FG    = vi_SysFg
+               AND A.MENU_NM   = vi_MenuNm
+               AND A.PGM_ID    = vi_PgmId
             ;
 
             EXCEPTION 
@@ -234,7 +255,7 @@ BEGIN
 
             IF C_MENU_ID IS NULL THEN 
     
-                IF V_MENU_ID IS NULL THEN 
+                IF vi_MenuId IS NULL THEN 
 
                     SELECT 'MN'||LPAD(SQ_TB_SY_MENU_MENU_ID.NEXTVAL,5,'0')
                       INTO C_MENU_ID
@@ -243,7 +264,7 @@ BEGIN
                         
                 ELSE
                         
-                    C_MENU_ID := V_MENU_ID;
+                    C_MENU_ID := vi_MenuId;
 
                 END IF;
 
@@ -265,12 +286,12 @@ BEGIN
                 , UPDT_DTIME
                 )
                 VALUES
-                ( V_SYS_FG
+                ( vi_SysFg
                 , C_MENU_ID
-                , V_MENU_NM
-                , V_PGM_ID
+                , vi_MenuNm
+                , vi_PgmId
                 , C_MCLS_ID
-                , V_SORT_ORD
+                , vi_SortOrd
                 , 'Y'
                 , 'SYSTEM'
                 , SYSDATE
@@ -288,10 +309,10 @@ BEGIN
 
 
     C_ERR_CD  := '0040';
-    C_ERR_MSG := 'V_PGM_ID::[' || V_PGM_ID || ']';
+    C_ERR_MSG := 'vi_PgmId::[' || vi_PgmId || ']';
 
     -- 프로그램 생성
-    IF V_PGM_ID IS NOT NULL THEN
+    IF vi_PgmId IS NOT NULL THEN
 
         DBMS_OUTPUT.PUT_LINE('>>>>>프로그램 생성 시작 >>>>>');    
 
@@ -299,13 +320,13 @@ BEGIN
     
             MERGE INTO TB_SY_PGM A
             USING DUAL 
-               ON (     A.SYS_FG = V_SYS_FG
-                    AND A.PGM_ID = V_PGM_ID )
+               ON (     A.SYS_FG = vi_SysFg
+                    AND A.PGM_ID = vi_PgmId )
              WHEN MATCHED THEN
            UPDATE 
-              SET A.PGM_NM          = V_PGM_NM
-                , A.PGM_URL         = CASE WHEN V_PGM_URL IS NULL THEN SUBSTR(V_PGM_ID,1,4) || '::' || V_PGM_ID
-                                      ELSE V_PGM_URL END
+              SET A.PGM_NM          = vi_PgmNm
+                , A.PGM_URL         = CASE WHEN V_PGM_URL IS NULL THEN SUBSTR(vi_PgmId,1,4) || '::' || vi_PgmId
+                                      ELSE vi_PgmUrl END
                 , SAVE_AUTH_USE_YN  = 'Y'
                 , DEL_AUTH_USE_YN   = 'Y'
                 , PRNT_AUTH_USE_YN  = 'Y'
@@ -332,11 +353,11 @@ BEGIN
                 , UPDT_DTIME
                 )
            VALUES
-                ( V_SYS_FG
-                , V_PGM_ID
-                , V_PGM_NM
-                , CASE WHEN V_PGM_URL IS NULL THEN SUBSTR(V_PGM_ID,1,4) || '::' || V_PGM_ID
-                  ELSE V_PGM_URL END
+                ( vi_SysFg
+                , vi_PgmId
+                , vi_PgmNm
+                , CASE WHEN V_PGM_URL IS NULL THEN SUBSTR(vi_PgmId,1,4) || '::' || vi_PgmId
+                  ELSE vi_PgmUrl END
                 , 'Y'
                 , 'Y'
                 , 'Y'
@@ -357,10 +378,10 @@ BEGIN
 
 
     C_ERR_CD  := '0050';
-    C_ERR_MSG := 'V_USER_ID::[' || V_USER_ID || ']';
+    C_ERR_MSG := 'vi_UserId::[' || vi_UserId || ']';
 
     -- 사용자 프로그램 권한 생성
-    IF V_USER_ID IS NOT NULL THEN
+    IF vi_UserId IS NOT NULL THEN
 
         DBMS_OUTPUT.PUT_LINE('>>>>>사용자 메뉴 권한 생성 시작 >>>>>');    
 
@@ -368,9 +389,9 @@ BEGIN
     
             MERGE INTO TB_SY_USER_PGM A
             USING DUAL 
-               ON (     A.USER_ID = V_USER_ID
-                    AND A.SYS_FG  = V_SYS_FG
-                    AND A.PGM_ID  = V_PGM_ID )
+               ON (     A.USER_ID = vi_UserId
+                    AND A.SYS_FG  = vi_SysFg
+                    AND A.PGM_ID  = vi_PgmId )
              WHEN MATCHED THEN
            UPDATE 
               SET SAVE_AUTH_YN  = 'Y'
@@ -396,9 +417,9 @@ BEGIN
                 , UPDT_DTIME
                 )
            VALUES
-                ( V_USER_ID
-                , V_SYS_FG
-                , V_PGM_ID
+                ( vi_UserId
+                , vi_SysFg
+                , vi_PgmId
                 , 'Y'
                 , 'Y'
                 , 'Y'
@@ -430,6 +451,6 @@ EXCEPTION
 
         ROLLBACK;  
         RETURN;
+    END;  
 
-END PR_MENU_CREATE;
-/
+END PKG_MENU_MNG;

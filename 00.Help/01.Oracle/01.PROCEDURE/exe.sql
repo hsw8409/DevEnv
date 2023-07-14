@@ -1,32 +1,4 @@
 
-
-DECLARE 
-    V_SYS_FG   VARCHAR2(100) := 'BOS';
-    V_MENU_ID  VARCHAR2(100) := 'MN00001';
-    V_LCLS_NM  VARCHAR2(100) := '기준정보';
-    V_MCLS_NM  VARCHAR2(100) := '상품관리';
-    V_MENU_NM  VARCHAR2(100) := '상품등록';
-    V_PGM_ID   VARCHAR2(100) := 'BAVD0030';
-    V_PGM_NM   VARCHAR2(100) := '상품등록';
-    V_PGM_URL  VARCHAR2(100) := 'BAVD::BAVD0030';
-    V_USER_ID  VARCHAR2(100) := 'astems';
-
-BEGIN
-    PR_MENU_CREATE ( V_SYS_FG 
-                   , V_MENU_ID         
-                   , V_LCLS_NM         
-			       , V_MCLS_NM         
-                   , V_MENU_NM         
-                   , V_PGM_ID          
-			       , V_PGM_NM          
-			       , V_PGM_URL         
-			       , V_USER_ID         
-                   );
-
-
-END;
-
-
 DELETE FROM TB_SY_MENU;
 DELETE FROM TB_SY_PGM;
 DELETE FROM TB_SY_USER_PGM;
