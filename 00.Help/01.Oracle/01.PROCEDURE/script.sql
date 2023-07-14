@@ -37,6 +37,8 @@ BEGIN
     -- 대분류        
     IF V_LCLS_NM IS NOT NULL THEN 
 
+        DBMS_OUTPUT.PUT_LINE('>>>>>대분류 생성 시작 >>>>>');
+
         BEGIN
     
             C_ERR_CD  := '0011';
@@ -53,49 +55,59 @@ BEGIN
             ;
 
             C_ERR_MSG := 'C_LCLS_ID::[' || C_LCLS_ID || ']';
-    
+
             EXCEPTION 
                  WHEN NO_DATA_FOUND THEN
+                    C_LCLS_ID := NULL;
 
-                    IF V_LCLS_ID IS NULL THEN 
-
-                        SELECT 'MN'||LPAD(SQ_TB_SY_MENU_MENU_ID.NEXTVAL,5,'0')
-                          INTO C_LCLS_ID
-                          FROM DUAL
-                        ;
-
-                    ELSE
-                        
-                        C_LCLS_ID := V_LCLS_ID;
-
-                    END IF;
-
-                    C_ERR_CD  := '0012';
-                    C_ERR_MSG := 'C_LCLS_ID::[' || C_LCLS_ID || ']';
-    
-                    INSERT INTO TB_SY_MENU
-                    ( SYS_FG
-                    , MENU_ID
-                    , MENU_NM
-                    , UP_MENU_ID
-                    , USE_YN
-                    , REGI_ID
-                    , REGI_DTIME
-                    , UPDT_ID
-                    , UPDT_DTIME
-                    )
-                    VALUES
-                    ( V_SYS_FG
-                    , C_LCLS_ID
-                    , V_LCLS_NM
-                    , 'MN00000'
-                    , 'Y'
-                    , 'SYSTEM'
-                    , SYSDATE
-                    , 'SYSTEM'
-                    , SYSDATE
-                    );
         END;
+
+        BEGIN
+
+            IF C_LCLS_ID IS NOT NULL THEN 
+
+                IF V_LCLS_ID IS NULL THEN 
+                    SELECT 'MN'||LPAD(SQ_TB_SY_MENU_MENU_ID.NEXTVAL,5,'0')
+                      INTO C_LCLS_ID
+                      FROM DUAL
+                    ;
+                ELSE
+                    
+                    C_LCLS_ID := V_LCLS_ID;
+
+                END IF;
+
+                C_ERR_CD  := '0012';
+                C_ERR_MSG := 'C_LCLS_ID::[' || C_LCLS_ID || ']';
+                
+                INSERT INTO TB_SY_MENU
+                ( SYS_FG
+                , MENU_ID
+                , MENU_NM
+                , UP_MENU_ID
+                , USE_YN
+                , REGI_ID
+                , REGI_DTIME
+                , UPDT_ID
+                , UPDT_DTIME
+                )
+                VALUES
+                ( V_SYS_FG
+                , C_LCLS_ID
+                , V_LCLS_NM
+                , 'MN00000'
+                , 'Y'
+                , 'SYSTEM'
+                , SYSDATE
+                , 'SYSTEM'
+                , SYSDATE
+                );
+
+            END IF;
+
+        END;
+
+        DBMS_OUTPUT.PUT_LINE('>>>>>대분류 생성 종료 >>>>>');
 
     END IF;
 
@@ -105,6 +117,8 @@ BEGIN
 
     -- 중분류
     IF V_MCLS_NM IS NOT NULL THEN
+
+        DBMS_OUTPUT.PUT_LINE('>>>>>중분류 생성 시작 >>>>>');
 
         BEGIN
 
@@ -121,7 +135,7 @@ BEGIN
                  , C_UP_MENU_ID
               FROM TB_SY_MENU A
              WHERE 1=1
-               AND A.SYS_FG     = V_SYS_FG
+               AND A.SYS_FG      = V_SYS_FG
                AND A.MENU_NM     = V_MCLS_NM
                AND A.UP_MENU_ID != 'MN00000'             
                AND A.PGM_ID     IS NULL
@@ -173,6 +187,8 @@ BEGIN
     
         END;
 
+        DBMS_OUTPUT.PUT_LINE('>>>>>중분류 생성 종료 >>>>>');
+
     END IF;
 
 
@@ -182,17 +198,19 @@ BEGIN
     -- 메뉴
     IF V_MENU_NM IS NOT NULL THEN
 
+        DBMS_OUTPUT.PUT_LINE('>>>>>메뉴 생성 시작 >>>>>');
+
         BEGIN
 
             C_ERR_CD  := '0031';
     
-            SELECT MENU_ID
+            SELECT A.MENU_ID
               INTO C_MENU_ID
               FROM TB_SY_MENU A
              WHERE 1=1
-               AND A.SYS_FG     = V_SYS_FG
-               AND MENU_NM = V_MENU_NM
-               AND PGM_ID  = V_PGM_ID
+               AND A.SYS_FG    = V_SYS_FG
+               AND A.MENU_NM   = V_MENU_NM
+               AND A.PGM_ID    = V_PGM_ID
             ;
     
             EXCEPTION 
@@ -244,14 +262,18 @@ BEGIN
     
         END;
 
+        DBMS_OUTPUT.PUT_LINE('>>>>>메뉴 생성 종료 >>>>>');
+
     END IF;    
 
 
-    C_ERR_CD  := '0030';
-    C_ERR_MSG := 'V_MENU_NM::[' || V_MENU_NM || ']';
+    C_ERR_CD  := '0040';
+    C_ERR_MSG := 'V_PGM_ID::[' || V_PGM_ID || ']';
 
     -- 프로그램 생성
     IF V_PGM_ID IS NOT NULL THEN
+
+        DBMS_OUTPUT.PUT_LINE('>>>>>프로그램 생성 시작 >>>>>');    
 
         BEGIN
     
@@ -309,11 +331,18 @@ BEGIN
 
         END;
 
+        DBMS_OUTPUT.PUT_LINE('>>>>>프로그램 생성 종료 >>>>>');    
+
     END IF;    
 
 
+    C_ERR_CD  := '0050';
+    C_ERR_MSG := 'V_USER_ID::[' || V_USER_ID || ']';
+
     -- 사용자 프로그램 권한 생성
     IF V_USER_ID IS NOT NULL THEN
+
+        DBMS_OUTPUT.PUT_LINE('>>>>>사용자 메뉴 권한 생성 시작 >>>>>');    
 
         BEGIN
     
@@ -363,19 +392,23 @@ BEGIN
     
         END; 
 
+        DBMS_OUTPUT.PUT_LINE('>>>>>사용자 메뉴 권한 생성 종료 >>>>>');    
+
     END IF;   
+
+    COMMIT;    
 
     DBMS_OUTPUT.PUT_LINE('>>>>>END>>>>>');
 
-    COMMIT;
+
 
 
 EXCEPTION
      WHEN OTHERS THEN
         
-        DBMS_OUTPUT.PUT_LINE('>>ERROR>>['||C_ERR_CD||'] ['||C_ERR_MSG||'] ['||SQLCODE||'] '|| SQLERRM);
+        DBMS_OUTPUT.PUT_LINE('>>ERROR>>['||C_ERR_CD||'] ['||C_ERR_MSG||'] ['||SQLCODE||'] '|| SQLERRM || '@@@@@@@@@@@@@@@@@@@@@@@@@@@@');
 
         ROLLBACK;  
         RETURN;
 
-END;
+END PR_MENU_CREATE;

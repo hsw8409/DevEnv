@@ -9,7 +9,7 @@
 <script>
 
   // 엑셀 양식 다운로드 타이틀.
-  const arrHeader = ["담당자", "년월", "중분류", "소분류", "소계"];
+  const arrHeader = ["담당자", "년월", "기간", "중분류", "소분류", "소계"];
 
   // 월, 프로젝트, M/D계
   let subData = [];  
@@ -26,6 +26,8 @@
     let body = [];
     let headerInfo = new Object();
 
+    let subWork = 0;
+
 
     for ( var i=0; i<arrHeader.length; i++){
 
@@ -39,16 +41,54 @@
     console.log(subData);
 
     for ( var j=0; j<subData.length; j++){
+      
 
         let bodyInfo = [];
 
+        // 팀원별 소계 추가.
+        if ( j != 0 ){        
+          if( subData[j].userNm != subData[j-1].userNm ){
+            
+            bodyInfo = [];
+
+            bodyInfo[0] = subData[j-1].userNm;
+            bodyInfo[1] = "소계";
+            bodyInfo[2] = "";
+            bodyInfo[3] = "";
+            bodyInfo[4] = "";
+            bodyInfo[5] = subWork;
+
+            excelData.push(bodyInfo);     
+            
+            subWork = 0;
+          }
+        }        
+
+        bodyInfo = [];
         bodyInfo[0] = subData[j].userNm;
         bodyInfo[1] = subData[j].months;
-        bodyInfo[2] = subData[j].mClass;
-        bodyInfo[3] = subData[j].sClass;
-        bodyInfo[4] = subData[j].work;
+        bodyInfo[2] = subData[j].prDt;
+        bodyInfo[3] = subData[j].mClass;
+        bodyInfo[4] = subData[j].sClass;
+        bodyInfo[5] = subData[j].work;
 
         excelData.push(bodyInfo);
+
+        subWork = subWork + subData[j].work;
+
+        // 팀원별 소계 추가.
+        if ( j+1 == subData.length ){        
+          bodyInfo = [];
+
+          bodyInfo[0] = subData[j-1].userNm;
+          bodyInfo[1] = "소계";
+          bodyInfo[2] = "";
+          bodyInfo[3] = "";
+          bodyInfo[4] = "";
+          bodyInfo[5] = subWork;
+
+          excelData.push(bodyInfo);   
+        }         
     }
 
     const ws = XLSX.utils.aoa_to_sheet(excelData);
@@ -60,6 +100,8 @@
   }
 
   function upload(event) {
+
+    subData = [];
 
     var input = event.target;
     var reader = new FileReader();
@@ -102,9 +144,13 @@
               if ( colHeader == "담당자"){
                 subObj.userNm = colText;
               }else if ( colHeader == "업무일"){
+
+                colText = colText.replaceAll('/', '-');
+                subObj.workDt = colText;                
                 // 슬러시 제거
-                colText = colText.replaceAll('/', '').substr(0,6);
+                colText = colText.replaceAll('-', '').substr(0,6);
                 subObj.months = colText;
+
               }else if ( colHeader == "중분류"){
                 subObj.mClass = colText;
               }else if ( colHeader == "소분류"){
@@ -121,9 +167,12 @@
           var findData = subData.findIndex(e => e.userNm === subObj.userNm && e.months === subObj.months && e.mClass === subObj.mClass && e.sClass === subObj.sClass ) ;
           //console.log(findData);                    
           if ( findData == -1 ){
+            subObj.prDt = subObj.workDt + " ~ " + subObj.workDt;
             subData.push(subObj);
           }else{
+            subData[findData].prDt = subObj.workDt +" "+ subData[findData].prDt.substr(11,13);
             subData[findData].work = Number(subData[findData].work) + Number(subObj.work);
+
           }                    
         });
       });
@@ -149,6 +198,7 @@
           tableStrSub += "<tr>";
           tableStrSub += "<td style='color:red;width:12%;border:1px solid;'>담당자<th>";
           tableStrSub += "<td style='color:red;width:10%;border:1px solid;'>년월<th>";
+          tableStrSub += "<td style='color:red;width:10%;border:1px solid;'>기간(Fr~To)<th>";
           tableStrSub += "<td style='color:red;width:30%;border:1px solid;'>중분류<th>";
           tableStrSub += "<td style='color:red;width:40%;border:1px solid;'>소분류<th>";                
           tableStrSub += "<td style='color:red;width:8%;border:1px solid;'>소계<th>";
@@ -160,6 +210,7 @@
           tableStrSub += "<tr>";                    
           tableStrSub += "<td style='border:1px solid;'>" + subData[i].userNm + "<td>";
           tableStrSub += "<td style='border:1px solid;'>" + subData[i].months + "<td>";
+          tableStrSub += "<td style='border:1px solid;'>" + subData[i].prDt   + "<td>";
           tableStrSub += "<td style='border:1px solid;'>" + subData[i].mClass + "<td>";
           tableStrSub += "<td style='border:1px solid;'>" + subData[i].sClass + "<td>";
           tableStrSub += "<td style='border:1px solid;'>" + subData[i].work   + "<td>";
