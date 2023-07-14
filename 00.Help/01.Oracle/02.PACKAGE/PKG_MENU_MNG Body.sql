@@ -5,43 +5,44 @@ create or replace PACKAGE BODY PKG_MENU_MNG AS
 ******************************************************************************/
 
 
-    /***************************************************************************
-      * PR_MENU_CRD                              -메뉴 생성
-    ***************************************************************************/
+/***************************************************************************
+  * PR_MENU_CRD                              - 메뉴 생성
+  * PR_PGM_CRD                               - 프로그램 생성      
+***************************************************************************/
 
     
-    /**************************************************************************
-    NAME:      PR_MENU_CRD
-    PURPOSE:   메뉴 생성    
-    REVISIONS:
-    Ver        Date        Coder            Description
-    ---------  ----------  ---------------  -----------------------------------
-    1.0        2023-07-14  한상우           1. Created
-    ***************************************************************************/
-    PROCEDURE PR_MENU_CRD (
-        vi_SysFg            IN VARCHAR2            -- 시스템 구분코드
-      , vi_LclsId           IN VARCHAR2            -- 대분류ID(메뉴)
-      , vi_LclsNm           IN VARCHAR2            -- 대분류명(메뉴)
-      , vi_MclsId           IN VARCHAR2            -- 중분류ID(메뉴)
-      , vi_MclsNm           IN VARCHAR2            -- 중분류명(메뉴)
-      , vi_MenuId           IN VARCHAR2            -- 메뉴ID(메뉴)
-      , vi_MenuNm           IN VARCHAR2            -- 메뉴명(메뉴)
-      , vi_SortOrd          IN NUMBER              -- 정렬분선
-      , vi_PgmId            IN VARCHAR2            -- 프로그램ID(프로그램)
-      , vi_PgmNm            IN VARCHAR2            -- 프로그램명(프로그램)
-      , vi_PgmUrl           IN VARCHAR2            -- 프로그램파일경로(프로그램)
-      , vi_UserId           IN VARCHAR2            -- 메뉴 권한부여 사용자(메뉴)
-    )
-    IS
+/**************************************************************************
+NAME:      PR_MENU_CRD
+PURPOSE:   메뉴 생성    
+REVISIONS:
+Ver        Date        Coder            Description
+---------  ----------  ---------------  -----------------------------------
+1.0        2023-07-14  한상우           1. Created
+***************************************************************************/
+PROCEDURE PR_MENU_CRD (
+    vi_SysFg            IN VARCHAR2            -- 시스템 구분코드
+  , vi_LclsId           IN VARCHAR2            -- 대분류ID(메뉴)
+  , vi_LclsNm           IN VARCHAR2            -- 대분류명(메뉴)
+  , vi_MclsId           IN VARCHAR2            -- 중분류ID(메뉴)
+  , vi_MclsNm           IN VARCHAR2            -- 중분류명(메뉴)
+  , vi_MenuId           IN VARCHAR2            -- 메뉴ID(메뉴)
+  , vi_MenuNm           IN VARCHAR2            -- 메뉴명(메뉴)
+  , vi_SortOrd          IN NUMBER              -- 정렬순서
+  , vi_PgmId            IN VARCHAR2            -- 프로그램ID(프로그램)
+  , vi_PgmNm            IN VARCHAR2            -- 프로그램명(프로그램)
+  , vi_PgmUrl           IN VARCHAR2            -- 프로그램파일경로(프로그램)
+  , vi_UserId           IN VARCHAR2            -- 메뉴 권한부여 사용자(메뉴)
+)
+IS
 
-    C_LCLS_ID     TB_SY_MENU.MENU_ID     %TYPE;    -- 대분류 메뉴ID
-    C_MCLS_ID     TB_SY_MENU.MENU_ID     %TYPE;    -- 중분류 메뉴ID
-    C_MENU_ID     TB_SY_MENU.MENU_ID     %TYPE;    -- 메뉴ID
-    C_PGM_ID      TB_SY_MENU.PGM_ID      %TYPE;    -- 프로그램ID
-    C_UP_MENU_ID  TB_SY_MENU.UP_MENU_ID  %TYPE;    -- 상위프로그램ID
+C_LCLS_ID     TB_SY_MENU.MENU_ID     %TYPE;    -- 대분류 메뉴ID
+C_MCLS_ID     TB_SY_MENU.MENU_ID     %TYPE;    -- 중분류 메뉴ID
+C_MENU_ID     TB_SY_MENU.MENU_ID     %TYPE;    -- 메뉴ID
+C_PGM_ID      TB_SY_MENU.PGM_ID      %TYPE;    -- 프로그램ID
+C_UP_MENU_ID  TB_SY_MENU.UP_MENU_ID  %TYPE;    -- 상위프로그램ID
 
-    C_ERR_CD  VARCHAR2(4);
-    C_ERR_MSG VARCHAR2(4000);
+C_ERR_CD  VARCHAR2(4);
+C_ERR_MSG VARCHAR2(4000);
 
 
 BEGIN
@@ -325,7 +326,7 @@ BEGIN
              WHEN MATCHED THEN
            UPDATE 
               SET A.PGM_NM          = vi_PgmNm
-                , A.PGM_URL         = CASE WHEN V_PGM_URL IS NULL THEN SUBSTR(vi_PgmId,1,4) || '::' || vi_PgmId
+                , A.PGM_URL         = CASE WHEN vi_PgmUrl IS NULL THEN SUBSTR(vi_PgmId,1,4) || '::' || vi_PgmId
                                       ELSE vi_PgmUrl END
                 , SAVE_AUTH_USE_YN  = 'Y'
                 , DEL_AUTH_USE_YN   = 'Y'
@@ -356,7 +357,7 @@ BEGIN
                 ( vi_SysFg
                 , vi_PgmId
                 , vi_PgmNm
-                , CASE WHEN V_PGM_URL IS NULL THEN SUBSTR(vi_PgmId,1,4) || '::' || vi_PgmId
+                , CASE WHEN vi_PgmUrl IS NULL THEN SUBSTR(vi_PgmId,1,4) || '::' || vi_PgmId
                   ELSE vi_PgmUrl END
                 , 'Y'
                 , 'Y'
@@ -451,6 +452,10 @@ EXCEPTION
 
         ROLLBACK;  
         RETURN;
-    END;  
+END;
+
+
+
+
 
 END PKG_MENU_MNG;
