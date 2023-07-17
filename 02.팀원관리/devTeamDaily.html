@@ -38,7 +38,7 @@
     }
     excelData.push(header);
 
-    console.log(subData);
+    //console.log(subData);
 
     for ( var j=0; j<subData.length; j++){
       
@@ -74,7 +74,7 @@
 
         excelData.push(bodyInfo);
 
-        subWork = subWork + subData[j].work;
+        subWork = subWork + Number(subData[j].work);
 
         // 팀원별 소계 추가.
         if ( j+1 == subData.length ){        
@@ -98,6 +98,8 @@
     XLSX.writeFile(wb, uploadFileName[0] + "_sub.xlsx");
 
   }
+
+
 
   function upload(event) {
 
@@ -156,7 +158,7 @@
               }else if ( colHeader == "소분류"){
                 subObj.sClass = colText;
               }else if ( colHeader == "M/D"){
-                subObj.work = colText;
+                subObj.work = Number(colText);
               }
             }                            
           });
@@ -200,7 +202,7 @@
           tableStrSub += "<td style='color:red;width:10%;border:1px solid;'>년월<th>";
           tableStrSub += "<td style='color:red;width:10%;border:1px solid;'>기간(Fr~To)<th>";
           tableStrSub += "<td style='color:red;width:30%;border:1px solid;'>중분류<th>";
-          tableStrSub += "<td style='color:red;width:40%;border:1px solid;'>소분류<th>";                
+          tableStrSub += "<td style='color:red;width:30%;border:1px solid;'>소분류<th>";                
           tableStrSub += "<td style='color:red;width:8%;border:1px solid;'>소계<th>";
           tableStrSub += "</tr>";    
           
@@ -235,7 +237,7 @@
 </head>
 <body>
 	<input type="file" id="id_file_upload" onchange="upload(event)"/> '일별보고에서 다운 받은 파일을 .xlsx' 확장자로 변환 후 선택해주세요. <br/>
-    <input type="button" id="id_sample_download" onclick="download()" value ="소계 결과 다운로드"/>
+    <input type="button" id="id_file_download" onclick="download()" value ="소계 결과 다운로드"/>
 	<br />
   <div>
 	<div id="xlsArea" style="width:60%;"></div>
