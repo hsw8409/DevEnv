@@ -3,11 +3,11 @@
   </template>
   
   <script>
-  //import { ref } from 'vue';
+  import { ref } from 'vue';
   export default {
-    // setup() {
-    //   const data = ref('i am data');
-    //   return { data };
-    // }
+    setup() {
+      const data = ref('i am data');
+      return { data };
+    }
   }
   </script>
