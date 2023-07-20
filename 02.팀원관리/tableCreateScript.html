@@ -2,14 +2,16 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title> 테이블 정의서 기반으로 테이블 생성 스크립트 만들기</title>
+<title> 1회 사용시 커피 값</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
 <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 <script>
 
   // 엑셀 양식 다운로드 타이틀.
-  const arrHeader = ["TABLE_NAME", "TABLE_COMMENT", "COLUMN_ID", "COLUMN_NAME", "COLUMN_COMMENT", "TYPE", "LENGTH", "NULLABLE", "PK", "TYPE_DESC", "DEFAULT"];
+  //const arrHeader = ["TABLE_NAME", "TABLE_COMMENT", "COLUMN_ID", "COLUMN_NAME", "COLUMN_COMMENT", "TYPE", "LENGTH", "NULLABLE", "PK", "DEFAULT", "RMK"];
+  const arrHeader = ["TABLE_NAME", "TABLE_COMMENT", "COLUMN_NAME", "COLUMN_COMMENT", "TYPE", "LENGTH", "NULLABLE", "DEFAULT", "RMK", "PK"];
+  const arrBody   = ["TB_STORE", "사업장정보", "STORE_CD", "사업장코드", "VARCHAR2", "10", "N", "", "8자리", "Y"];
 
   // 스크립트 생성시 자릿수 채울 길이 : 컬럼명, 컬럼desc, nullable, pk, coment_column
   const arrRpad = [30,15,15,60];
@@ -37,7 +39,9 @@
 
     // 엑셀 양식의 타이틀 부분
     let header = [];
+    let body = [];
 
+    // 엑셀 타이블 부분
     for ( var i=0; i<arrHeader.length; i++){
 
       let headerInfo = new Object();
@@ -45,7 +49,15 @@
       header.push(headerInfo);
     }
 
+    // 엑셀 BODY 부분(내용)
+    for ( var i=0; i<arrHeader.length; i++){
+      let bodyInfo = new Object();
+      bodyInfo = arrBody[i];
+      body.push(bodyInfo);
+    }    
+
     excelData.push(header);
+    excelData.push(body);
 
     // 스타일을 적용
     const ws = XLSX.utils.aoa_to_sheet(excelData);
@@ -56,7 +68,7 @@
   }
 
 
-  // (text or sql ) 파일 다운로드
+  // (txt or sql ) 파일 다운로드
   function download(){
 
     let textArea = document.getElementById('textArea').innerText;
@@ -124,14 +136,26 @@
   }
 
   // 테이블 컬럼 스크립트 생성
-  function fnGetCreateColumn(i, obj){
+  function fnGetCreateColumn(i, obj, preTb){
     let rtn = "";
+
+    // 컬럼 타입 
+    let typeDesc = "";
+
+    // DATE, TIMESTAMP type인 경우에는 그대로 유지.
+    if ( obj.TYPE.indexOf('DATE') > -1  || obj.TYPE.indexOf('TIMESTAMP') > -1 ){
+      typeDesc = obj.TYPE;
+    }else{
+      typeDesc = obj.TYPE + "(" + obj.LENGTH+ ")" ;
+    }    
     
     // 컬럼 desc
-    if ( obj.COLUMN_ID == "1"){
-      rtn = "  " + rPad(obj.COLUMN_NAME ,arrRpad[0] ," ") + " " + rPad(obj.TYPE_DESC ,arrRpad[1] ," ");
+    //if ( obj.COLUMN_ID == "1"){
+    // 첫번째 컬럼인지 유무를 판단하기 위한 
+    if ( obj.TABLE_NAME != preTb || preTb == ""){      
+      rtn = "  " + rPad(obj.COLUMN_NAME ,arrRpad[0] ," ") + " " + rPad(typeDesc ,arrRpad[1] ," ");
     }else{
-      rtn = ", " + rPad(obj.COLUMN_NAME ,arrRpad[0] ," ") + " " + rPad(obj.TYPE_DESC ,arrRpad[1] ," ");
+      rtn = ", " + rPad(obj.COLUMN_NAME ,arrRpad[0] ," ") + " " + rPad(typeDesc ,arrRpad[1] ," ");
     }
 
     // 컬럼 default
@@ -158,8 +182,6 @@
 
     let rtn = "";
 
-    //let strTblSpace = document.getElementById('tblSpace').value;
-
     let spaceDat = document.getElementById('spaceDat').value;
     let spaceIdx = document.getElementById('spaceIdx').value; 
 
@@ -174,10 +196,8 @@
         // 테이블명이 너무 길어서 pk index 생성시 오류 발생.
         // 'IF_' -> '' 치환.
         if( tblName.length > 27){
-          tblName = tblName.substr(1,27);
+          tblName = tblName.substr(0,27);
         }
-        
-
 
         rtn = ", CONSTRAINT PK_" + tblName + " PRIMARY KEY (" + "<br>";
         rtn += "    "+ str + "<br>";
@@ -189,14 +209,24 @@
   }
 
   // 테이블 커맨트 스크립트 생성
-  function fnGetCreateComment(i, obj){
+  function fnGetCreateComment(i, obj, preTb){
     let rtn = "";
 
-    if ( obj.COLUMN_ID == "1"){
+    let comments = "";
+
+    if ( fnGetData("TEXT",obj.RMK) != ""){
+      comments = obj.COLUMN_COMMENT + " ( " +obj.RMK+ " ) ";
+    }else{
+      comments = obj.COLUMN_COMMENT;
+    }
+    
+
+    //if ( obj.COLUMN_ID == "1"){
+    if ( obj.TABLE_NAME != preTb || preTb == ""){            
       rtn += "COMMENT ON TABLE  " + rPad(obj.TABLE_NAME, arrRpad[3], " ") + " IS '" + fnGetData("TEXT",obj.TABLE_COMMENT) + "';" + "<br>";
     }
     
-    rtn += "COMMENT ON COLUMN " + rPad(obj.TABLE_NAME + "." + obj.COLUMN_NAME, arrRpad[3], " ") + " IS '" + fnGetData("TEXT", obj.COLUMN_COMMENT) + "';" + "<br>";
+    rtn += "COMMENT ON COLUMN " + rPad(obj.TABLE_NAME + "." + obj.COLUMN_NAME, arrRpad[3], " ") + " IS '" + fnGetData("TEXT", comments) + "';" + "<br>";
 
     return rtn;
   }
@@ -204,7 +234,7 @@
 
   // 테이블 정의서 파일 업로드.
 	function upload(event) {
-		
+
     var input = event.target;
 		var reader = new FileReader();
 
@@ -234,8 +264,8 @@
               colData.TABLE_NAME = colText; 
             }else if( colHeader == "TABLE_COMMENT"){
               colData.TABLE_COMMENT = colText;
-            }else if( colHeader == "COLUMN_ID"){
-              colData.COLUMN_ID = colText;
+//            }else if( colHeader == "COLUMN_ID"){
+//              colData.COLUMN_ID = colText;
             }else if( colHeader == "COLUMN_NAME"){
               colData.COLUMN_NAME = colText;
             }else if( colHeader == "COLUMN_COMMENT"){
@@ -248,11 +278,12 @@
               colData.NULLABLE = colText;
             }else if( colHeader == "PK"){
               colData.PK = colText;
-            }else if( colHeader == "TYPE_DESC"){
-              colData.TYPE_DESC = colText;
             }else if( colHeader == "DEFAULT"){
               colData.DEFAULT = colText;
-            }                              
+            }else if( colHeader == "RMK"){
+              colData.RMK = colText;
+            }  
+                                       
 				  });
 
           arrList.push(colData);
@@ -269,19 +300,23 @@
       let strIndexQuery   ="";
       let strCommentQeury ="";
 
+      // 이전 테이블 명
+      let preTableName = "";
+
       var textArea = document.getElementById("textArea");
 
       //for( var i=0; i<arrList.length; i++){
       for( var i=0; i<arrList.length; i++){
     
         // 신규 테이블인 경우
-        if ( arrList[i].COLUMN_ID == "1"){
+        //if ( arrList[i].COLUMN_ID == "1"){
+        if ( arrList[i].TABLE_NAME != preTableName || preTableName == "" ){
 
           // 첫번째 행이 아닌 경우
           if ( i != 0 ){
-            strIndexQuery = fnGetCreateTblSpace('2', arrList[i-1].TABLE_NAME, strPkQuery );
+            strIndexQuery = fnGetCreateTblSpace('2', preTableName, strPkQuery );
             strQuery += strTblQuery.join(strColQuery + strIndexQuery );
-            strQuery += fnGetCreateTblSpace('1', arrList[i-1].TABLE_NAME, "" );
+            strQuery += fnGetCreateTblSpace('1', preTableName, "" );
             strQuery += strCommentQeury;
           }
 
@@ -291,7 +326,7 @@
 
           // 컬럼 스크립트 초기화
           strColQuery = "";
-          strColQuery += fnGetCreateColumn(i, arrList[i]);
+          strColQuery += fnGetCreateColumn(i, arrList[i], preTableName);
           
           // PK 스크립트 초기화
           strPkQuery = "";
@@ -302,11 +337,11 @@
          
           // 커맨트 스크립츠 초기화 
           strCommentQeury = "";
-          strCommentQeury += fnGetCreateComment(i, arrList[i]);
+          strCommentQeury += fnGetCreateComment(i, arrList[i], preTableName);
 
         }else{
-          strColQuery += fnGetCreateColumn(i, arrList[i]);
-          strCommentQeury += fnGetCreateComment(i, arrList[i]);
+          strColQuery += fnGetCreateColumn(i, arrList[i], preTableName);
+          strCommentQeury += fnGetCreateComment(i, arrList[i], preTableName);
 
           if ( arrList[i].PK == "Y"){
             strPkQuery += ", "+arrList[i].COLUMN_NAME;
@@ -316,15 +351,17 @@
 
         // 마지막 라인인 경우 
         if ( i == arrList.length-1 ){
-          strIndexQuery = fnGetCreateTblSpace('2', arrList[i-1].TABLE_NAME, strPkQuery );
+          strIndexQuery = fnGetCreateTblSpace('2', preTableName, strPkQuery );
           strQuery += strTblQuery.join(strColQuery + strIndexQuery );
-          strQuery += fnGetCreateTblSpace('1', arrList[i-1].TABLE_NAME, "" );
+          strQuery += fnGetCreateTblSpace('1', preTableName, "" );
           strQuery += strCommentQeury;
         }
 
         //console.log(strQuery);
+        preTableName = arrList[i].TABLE_NAME;
       }
       textArea.innerHTML = strQuery;
+      
     };
 
     reader.readAsBinaryString(input.files[0]);
@@ -349,7 +386,7 @@
 
     strQuery  = "SELECT A.TABLE_NAME                                                      "+"<br>";
     strQuery += "     , B.COMMENTS          AS TABLE_COMMENT                              "+"<br>";
-    strQuery += "     , C.COLUMN_ID                                                       "+"<br>";
+    //strQuery += "     , C.COLUMN_ID                                                       "+"<br>";
     strQuery += "     , C.COLUMN_NAME                                                     "+"<br>";
     strQuery += "     , D.COMMENTS          AS COLUMN_COMMENT                             "+"<br>";
     strQuery += "     , C.DATA_TYPE         AS TYPE                                       "+"<br>";
@@ -365,11 +402,6 @@
     strQuery += "                      AND X.TABLE_NAME = A.TABLE_NAME                    "+"<br>";
     strQuery += "					  AND Y.COLUMN_NAME = C.COLUMN_NAME                             "+"<br>";
     strQuery += "                 ) > 0 THEN 'Y' ELSE 'N' END                      AS PK  "+"<br>";
-    strQuery += "     , CASE WHEN C.DATA_TYPE = 'DATE' THEN C.DATA_TYPE                   "+"<br>";
-    strQuery += "            WHEN C.DATA_TYPE LIKE 'TIMESTAMP%' THEN C.DATA_TYPE          "+"<br>";
-    strQuery += "       ELSE C.DATA_TYPE || '(' ||C.DATA_LENGTH||')'                      "+"<br>";
-    strQuery += "       END AS TYPE_DESC                                                  "+"<br>";
-    strQuery += "     , C.DATA_DEFAULT AS TYPE_DESC                                       "+"<br>";    
     strQuery += "  FROM ALL_TABLES A                                                      "+"<br>";
     strQuery += "     , ALL_TAB_COMMENTS B                                                "+"<br>";
     strQuery += "     , ALL_TAB_COLUMNS  C                                                "+"<br>";
@@ -383,6 +415,12 @@
     strQuery += ";";
 
     textArea.innerHTML = strQuery;
+
+    document.getElementById("id_file_upload").value = "";
+  }
+
+  function fildChoice(){
+    document.getElementById("id_file_upload").value = "";
   }
 </script>
 
@@ -402,13 +440,13 @@
 
   <input type="button" id="id_sample_download" onclick="excelFileExport()" value ="업로드 양식 다운로드"/>&nbsp;
   <input type="button" id="id_sample_download" onclick="tableStructure()" value ="테이블정의서 조회 스크립트"/>&nbsp;
-	<input type="file" id="id_file_upload" onchange="upload(event)"/><br/>
+	<input type="file" id="id_file_upload" onclick="fildChoice()" onchange="upload(event)" title="1회 사용시 커피 값"/><br/>
   <label>다운로드 파일 확장자</label>
   <select id="saveType">
     <option value="sql">SQL(.sql)</option>    
-    <option value="text">텍스트(.text)</option>
+    <option value="text">텍스트(.txt)</option>
   </select>  
-  <input type="button" id="id_file_download" onclick="download()" value ="테이블 생성 쿼리 다운로드"/><br/>
+  <input type="button" id="id_file_download" onclick="download()" value ="테이블 생성 쿼리 다운로드" title="1회 사용시 커피 값"/><br/>
   <div id="textArea"></div>
 </body>
 </html>
