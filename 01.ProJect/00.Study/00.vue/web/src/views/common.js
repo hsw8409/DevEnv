@@ -1,5 +1,7 @@
 import { ref } from 'vue'
 
+const appName = "appName";
+
 const methods = {
     isEmpty: (value) => {
         alert(value);
@@ -14,6 +16,8 @@ export default {
         app.config.globalProperties.$isCall = function (data){
              alert(data);
 
-        }
+        },
+
+        app.config.globalProperties.appName = appName
     },
 }

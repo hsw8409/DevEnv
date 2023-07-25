@@ -10,4 +10,8 @@ app.use(common);
 
 app.component('compInput',compInput);
 
+
+
+
+
 app.mount('#app');

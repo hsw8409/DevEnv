@@ -27,7 +27,7 @@ export default {
         console.log(vSplit[0]);
         console.log(vSplit[1]);
 
-        this.$router.removeRoute({ path: "/"+vSplit[1], component: loadView(vSplit[0]+"/"+vSplit[1]) });
+        //this.$router.removeRoute({ path: "/"+vSplit[1], component: loadView(vSplit[0]+"/"+vSplit[1]) });
         this.$router.addRoute({ path: "/"+vSplit[1], component: loadView(vSplit[0]+"/"+vSplit[1]) });
         this.$router.push(goUrl);
 

@@ -1,7 +1,9 @@
 <template>
-  <div id="app">
+  <div>
     <compInput v-model="inputVal1" v-model:type="t_type"></compInput>
     <compInput v-model="inputVal2" v-model:type="n_type"></compInput>
+
+    <p>{{ inputVal1 }} </p>
   </div>    
   </template>
 
@@ -16,7 +18,7 @@ export default{
       inputVal1 : '',
       inputVal2 : '',
       t_type : 'text',
-      n_type : 'text'
+      n_type : 'number'
     }
   },
 
@@ -25,13 +27,15 @@ export default{
   },
 
   mounted (){
-        //this.$isEmpty("함수 호출11");
+    this.$isEmpty("함수 호출11");
 
-        //this.$isCall("함수 호출22");
+    //this.$isCall("함수 호출22");
     console.log("mounted");
   },
 
   updated (){
+
+    //console.log(inputVal1);
     console.log("updated");
   },
 
@@ -54,3 +58,4 @@ export default{
 
 
 </script>
+

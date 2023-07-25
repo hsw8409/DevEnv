@@ -1,10 +1,12 @@
 import { createWebHistory, createRouter } from "vue-router";
 import Main from "@/views/Main.vue";
-import PostDetail from "@/views/body.vue";
+import Body from "@/views/body.vue";
 
 import testpage1 from "@/views/testpage1.vue";
+import testpage2 from "@/views/testpage2.vue";
+import testpage3 from "@/views/testpage3.vue";
 
-let viewsArr = ["Main","PostDetail"];
+let viewsArr = ["Main","Body"];
 
 let viewsUrl = [
   {
@@ -39,6 +41,16 @@ const routes = [
   path: "/testpage1",
   name: testpage1,
   component: testpage1,
+}, 
+{
+  path: "/testpage2",
+  name: testpage2,
+  component: testpage2,
+}, 
+{
+  path: "/testpage3",
+  name: testpage3,
+  component: testpage3,
 }, 
 ];
 

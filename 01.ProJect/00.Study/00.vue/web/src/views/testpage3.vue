@@ -1,6 +1,14 @@
 <template>
-    <div>
-      <input type="checkbox" id="todo-item" checked="false" />
-      <label for="todo-item">My Todo Item</label>
-    </div>
-  </template>
+  <compInput v-model:gorani="data"></compInput>
+</template>
+
+<script>
+import { ref } from 'vue';
+
+export default {
+  setup() {
+    const data = ref('');
+    return { data };
+  }
+}
+</script>
