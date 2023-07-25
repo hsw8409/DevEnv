@@ -2,6 +2,8 @@ import { createWebHistory, createRouter } from "vue-router";
 import Main from "@/views/Main.vue";
 import PostDetail from "@/views/body.vue";
 
+import testpage1 from "@/views/testpage1.vue";
+
 let viewsArr = ["Main","PostDetail"];
 
 let viewsUrl = [
@@ -33,6 +35,11 @@ const routes = [
     name: viewsUrl[1].name,
     component: loadView(viewsUrl[1].url),
 },  
+{
+  path: "/testpage1",
+  name: testpage1,
+  component: testpage1,
+}, 
 ];
 
 

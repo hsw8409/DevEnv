@@ -1,21 +1,56 @@
 <template>
-    <MyInput
-      :data="data"
-      v-on:update="newValue => { data = newValue; }"
-    ></MyInput>
+  <div id="app">
+    <compInput v-model="inputVal1" v-model:type="t_type"></compInput>
+    <compInput v-model="inputVal2" v-model:type="n_type"></compInput>
+  </div>    
   </template>
-  
-  <script>
-  import { ref } from 'vue';
-  import MyInput from '@/components/comInput.vue';
-  
-  export default {
-    components : {
-      MyInput,
-    },
-    setup() {
-      const data = ref('');
-      return { data };
+
+<script>
+
+import { ref } from 'vue';
+export default{
+
+  //
+  data() {
+    return {
+      inputVal1 : '',
+      inputVal2 : '',
+      t_type : 'text',
+      n_type : 'text'
     }
+  },
+
+  methods (){
+    console.log("methods");
+  },
+
+  mounted (){
+        //this.$isEmpty("함수 호출11");
+
+        //this.$isCall("함수 호출22");
+    console.log("mounted");
+  },
+
+  updated (){
+    console.log("updated");
+  },
+
+  computed(){
+
+    console.log("computed");
+  },
+
+  watch(){
+
+    console.log("watch");
   }
-  </script>
+
+
+
+
+    
+}
+
+
+
+</script>
