@@ -1,25 +1,20 @@
 <template>
-	<input
-	  :type="type"
-	  :value="modelValue"
-	  @input="$emit('update:modelValue', $event.target.value)"
-	/>
-  </template>
-  
-  <script>
-  export default {
-	
-	// 메인화면에서 import시 속성값을 변경할 수 있도록 처리.
-	props : {
-		type : {
-			type : String,
-			required : true
-		},
-		modelValue : {
-			type : String,
-			required : true
-		}		
-	},	
+	<input :value="gorani" @input="update" />
+	<span>{{ gorani }}</span>
+</template>
 
-  }
-  </script>
+<script>
+export default {
+	props: {
+		gorani: { type: String },
+	},
+	emits: ['update:gorani'],
+	setup(props, context) {
+		const update = e => {
+			context.emit('update:gorani', e.target.value);
+		};
+
+		return { update };
+	},
+};
+</script>
